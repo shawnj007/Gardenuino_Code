@@ -56,6 +56,19 @@
 class PumpStepper : public AccelStepper
 {
 public:
+
+	typedef enum
+	{
+		CONTINUOUS = 0,
+		SYRINGE    = 1
+	} PumpType;
+	
+	typedef enum
+    {
+        DIRECTION_FORWARD  = 0,   ///< Counter-Clockwise
+	    DIRECTION_BACKWARD = 1    ///< Clockwise
+    } Direction;
+	
 	PumpStepper(uint8_t interface = AccelStepper::HALF4WIRE,
 				uint8_t pin1 = 2,
 				uint8_t pin2 = 3,
@@ -79,29 +92,15 @@ public:
 	void setVolumeTime(float milliliters, int seconds);
 
 	void stop();
-	boolean check_stop();
-	void runToStop();
-	void runSpeedToStop();
-	boolean runSpeedToPositionToStop();
+	bool check_stop();
+	bool runToStop();
+	bool runSpeedToStop();
+	bool runSpeedToPositionToStop();
 	
 	long setMaxPosition(long max_position);
 	long calibrateSyringePump();
 	long calibrateSyringePumpMaxPosition();
 
-protected:
-
-	typedef enum
-	{
-		CONTINUOUS = 0,
-		SYRINGE = 1
-	} PumpType;
-	
-	typedef enum
-    {
-        DIRECTION_FORWARD  = 0,   ///< Counter-Clockwise
-	    DIRECTION_BACKWARD 	= 1    ///< Clockwise
-    } Direction;
-	
 private:
 	AccelStepper _as;
 

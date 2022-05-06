@@ -1,8 +1,11 @@
 #include "PumpStepper.h"
 
-#define _TYPE PumpStepper::SYRINGE
-#define _H (float) 47.0
-#define _V (float) 3.0
+//#define _TYPE PumpStepper::SYRINGE
+//#define _H (float) 47.75
+//#define _V (float) 3.0
+
+#define _H (float) 69.0
+#define _V (float) 20.0
 
 #define _INTERFACE AccelStepper::HALF4WIRE
 #define _PIN1 48
@@ -13,7 +16,7 @@
 #define _STOP_B A1
 #define _ENABLE true
 
-SyringePumpStepper ps(	_TYPE,
+PumpStepper ps(	PumpStepper::SYRINGE,
 						_H,
 						_V,
 						_INTERFACE,
@@ -26,14 +29,22 @@ SyringePumpStepper ps(	_TYPE,
 						_ENABLE);
 
 void setup() {
+	delay(500);
 	//ps.calibratePumpMaxPosition();
 	Serial.begin(230400);
 	Serial.println("Pump setup");
-	ps.setVolumeTime(0.1,10);
+//	ps.setVolumeTime(3.6,10.0);
 }
 
 void loop() {
+	ps.setVolumeTime(-20,10);
+	while(ps.runSpeedToPositionToStop());
+	ps.setVolumeTime(5,10);
+	while(ps.runSpeedToPositionToStop());
+	ps.setVolumeTime(5,20);
+	while(ps.runSpeedToPositionToStop());
+	ps.setVolumeTime(10,20);
 	while(ps.runSpeedToPositionToStop());
 	Serial.println("Pump done");
-	while(true);
+	//while(true);
 }

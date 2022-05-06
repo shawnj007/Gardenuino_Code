@@ -75,7 +75,7 @@ void PumpStepper::setVolumeTime(float milliliters, int seconds) {
 	setMaxRate(rate);
 }
 
-boolean PumpStepper::check_stop() {
+bool PumpStepper::check_stop() {
 	long currentPosition = _as.currentPosition();
 	//Serial.print((_direction == DIRECTION_FORWARD ? "FORWARD" : "BACKWARD"));
 	//Serial.print(" currentPosition ");
@@ -93,21 +93,33 @@ boolean PumpStepper::check_stop() {
 
 void PumpStepper::stop() {
 	//Serial.println(" STOP");
-	_as.stop();
+	_as.setCurrentPosition(0);
 	_as.disableOutputs();
 }
 
-void PumpStepper::runToStop() {
+bool PumpStepper::runToStop() {
 	// Check for endstop signal
-	if (check_stop()) _as.run(); else stop();
+	if (check_stop()) {
+		_as.run();
+		return true;
+	} else {
+		stop();
+		return false;
+	}
 }
 
-void PumpStepper::runSpeedToStop() {
+bool PumpStepper::runSpeedToStop() {
 	// Check for endstop signal
-	if (check_stop()) _as.runSpeed(); else stop(); 
+	if (check_stop()) {
+		_as.runSpeed();
+		return true;
+	} else {
+		stop();
+		return false;
+	}
 }
 
-boolean PumpStepper::runSpeedToPositionToStop() {
+bool PumpStepper::runSpeedToPositionToStop() {
 	
 	// Check for endstop signal
 	if (check_stop()) {
@@ -120,7 +132,7 @@ boolean PumpStepper::runSpeedToPositionToStop() {
 }
 
 long PumpStepper::setMaxPosition(long max_position) {
-	_max_position = max_position;
+	_max_position = MIN(70.0 * STEPS_PER_MILLIMETER, max_position);
 	return _max_position;
 }
 
