@@ -1,6 +1,5 @@
 #include "PumpStepper.h"
 
-
 PumpStepper::PumpStepper(	uint8_t interface,
 							uint8_t pin1,
 							uint8_t pin2,
@@ -13,6 +12,8 @@ PumpStepper::PumpStepper(	uint8_t interface,
 	float	v = 3;
 	uint8_t stop_f = 0;
 	uint8_t stop_b = 0;
+	
+	_has_stops = false;
 	
 	PumpStepper(type, h, v, interface, pin1, pin2, pin3, pin4, stop_f, stop_b, enable);
 }
@@ -47,11 +48,13 @@ PumpStepper::PumpStepper(	uint8_t type,
 	
 	_target_position = 0;
 	
-	pinMode(stop_f, INPUT_PULLUP);
-	pinMode(stop_b, INPUT_PULLUP);
-	
-	_pin_stop[DIRECTION_FORWARD]  = stop_f;
-	_pin_stop[DIRECTION_BACKWARD] = stop_b;
+	if (_has_stops) {
+		pinMode(stop_f, INPUT_PULLUP);
+		pinMode(stop_b, INPUT_PULLUP);
+		
+		_pin_stop[DIRECTION_FORWARD]  = stop_f;
+		_pin_stop[DIRECTION_BACKWARD] = stop_b;
+	}
 	
 }
 
@@ -132,7 +135,7 @@ bool PumpStepper::runSpeedToPositionToStop() {
 }
 
 long PumpStepper::setMaxPosition(long max_position) {
-	_max_position = MIN(70.0 * STEPS_PER_MILLIMETER, max_position);
+	_max_position = MIN(70.0 * _steps_per_millimeter, max_position);
 	return _max_position;
 }
 
@@ -143,20 +146,14 @@ long PumpStepper::calibrateSyringePump() {
 		// Run pump to endstop
 		_as.moveTo(SYRINGE_MAX_POSITION);
 		_as.setSpeed(100);
-		while (_as.isRunning())
-			runSpeedToStop();
-		_as.setCurrentPosition(0);
+		while (runSpeedToStop());
 		
 		long max_pos = 0;
 		
 		// Run pump to other endstop
 		_as.moveTo(-(SYRINGE_MAX_POSITION));
 		_as.setSpeed(-100);
-		while (_as.isRunning()) {
-			runSpeedToStop();
-			max_pos = -(_as.currentPosition());
-		}
-		_as.setCurrentPosition(0);
+		while (runSpeedToStop());
 
 		// Set the calibrated position of end stop
 		return max_pos;
@@ -168,5 +165,3 @@ long PumpStepper::calibrateSyringePump() {
 long PumpStepper::calibrateSyringePumpMaxPosition() {
 	return setMaxPosition(calibrateSyringePump());
 }
-
-

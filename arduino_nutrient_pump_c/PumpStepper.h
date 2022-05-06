@@ -39,8 +39,8 @@
 //		200 × (9÷22) ÷ .5 x 68.5 ÷ 20 =  560.45 steps / mL for 20mL syringe ~ 11,200 pulses
 //		200 × (9÷22) ÷ .5 x 46.3 ÷  3 = 2525.45 steps / mL for  3mL syringe ~  7,600 pulses
 
-#define SYRINGE_MAX_DISTANCE ((float) 75.0) // mm	
-#define SYRINGE_MAX_POSITION (SYRINGE_STEPS_PER_MILLIMETER * SYRINGE_MAX_DISTANCE) // steps ~ 12275
+#define SYRINGE_MAX_DISTANCE ((float) 70.0) // mm	
+#define SYRINGE_MAX_POSITION (SYRINGE_STEPS_PER_MILLIMETER * SYRINGE_MAX_DISTANCE) // steps ~ 11455
 
 //		(  500 steps / second ) / (  560 steps / mL ) = 0.89 mL / seconds
 //		(  500 steps / second ) / ( 2525 steps / mL ) = 0.20 mL / seconds
@@ -52,6 +52,9 @@
 //		( 3000 steps / second ) / ( 2525 steps / mL ) = 1.19 mL / seconds
 
 #define SYRINGE_STEPS_PER_MILLILITER (SYRINGE_STEPS_PER_MILLIMETER * SYRINGE_MILLIMETER_PER_MILLILITER)
+
+#define MIN(A,B) (A > B ? B : A )
+#define MAX(A,B) (A < B ? B : A )
 
 class PumpStepper : public AccelStepper
 {
@@ -117,6 +120,7 @@ private:
 	long		_max_position;
 	long		_target_position;
 	
+	bool		_has_stops = true;
     uint8_t     _pin_stop[2];
 	
 };
