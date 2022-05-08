@@ -12,8 +12,8 @@
 #define _RAM  // Random Access Memory expansion
 #define _MMC  // SD card reader
 #define _SEN  // Sensors
-#define _FLO  // Flow rate sensors for h2o
-#define _H2O  // Stepper control for h2o
+#define _FLO  // Flow rate sensors for h2o (used for leak awareness, and h2o volume delivery watchdog, NOT used for nutrient delivery mixing)
+#define _H2O  // Stepper control for h2o (used for nutrient delivery mixing)
 #define _PWM  // Pulse width modulation (Motor speed) control
 #define _VAL  // Valves/Solenoids
 #define _NUT  // Stepper control for nutrients
@@ -35,7 +35,7 @@
 #if defined(_RAM) || defined(_MMC)
 #define _SPI
  #ifdef _RAM
-//#define SS_RAM 22
+#define SS_RAM 53
  #endif
  #ifdef _MMC
 #define SS_MMC	23
@@ -89,7 +89,7 @@ const uint8_t PWM[COUNT_PWM] = { 10 };
 #define PH_PUMP 0
 #define H2O_PUMP 1
 #define NUT_START 2
-#define NUTRIENTS 4
+#define NUTRIENTS 5
 #endif
 
 #define MAXSPEED 1000

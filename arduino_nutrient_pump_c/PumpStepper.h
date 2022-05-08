@@ -18,7 +18,7 @@
 //#define MILLIMETER_PER_MILLILITER A1
 
 // CONTINUOUS Pump characteristics
-#define CONTINUOUS_VOL_RATIO ((float) 2.0 / 3.0)					// Losses to "Squeeze" sections in pump
+#define CONTINUOUS_VOL_RATIO ((float) (2.0 / 3.0))					// Losses to "Squeeze" sections in pump
 
 #define CONTINUOUS_VOL_R ((float) 16.20)							//  16.200 mm - radius of tube in pump
 #define CONTINUOUS_VOL_C ((float) 2.0 * 3.14159 * CONTINUOUS_VOL_R)	// 101.788 mm - circumfrance of tube in pump
@@ -92,13 +92,19 @@ public:
 				bool enable = true);
 	
 	void setMaxRate(float rate);
-	void setVolumeTime(float milliliters, int seconds);
+	void setVolumeTime(float milliliters, float seconds);
 
+	long currentPosition();
+	
 	void stop();
 	bool check_stop();
 	bool runToStop();
 	bool runSpeedToStop();
 	bool runSpeedToPositionToStop();
+	
+	float getTimeToDispense(float volume);
+	float getDispensedDistance();
+	float getDispensedVolume();
 	
 	long setMaxPosition(long max_position);
 	long calibrateSyringePump();
@@ -112,6 +118,7 @@ private:
 	float		_h;
 	float		_v;
 	float		_a1;
+	float		_max_rate;
 	float		_steps_per_milliliter;
 	float		_steps_per_millimeter;
 	
@@ -120,7 +127,6 @@ private:
 	long		_max_position;
 	long		_target_position;
 	
-	bool		_has_stops = true;
     uint8_t     _pin_stop[2];
 	
 };

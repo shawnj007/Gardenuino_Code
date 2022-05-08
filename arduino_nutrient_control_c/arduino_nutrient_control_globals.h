@@ -1,20 +1,21 @@
 // total mL
-int opt_h2o_amt[WEEKS]   = { 200, 300, 500, 750, 1000, 1250, 1500, 1500, 1500, 1500, 1200, 1000, 1000 };
+int opt_h2o_amt[WEEKS]   = { 200, 300, 500, 750, 1000, 1000, 1500, 1500, 1500, 1500, 1200, 1000, 1000 };
 float cal_factor[2] = { 4.0, 4.0 };  // cal_factor = (ticks / mL)
 
 bool running_h2o = false;
 
 #ifdef _NUT
 // in mL per 1L
+#define ML_L 1000
 float opt_nut_ratio[NUTRIENTS][WEEKS] = { { 7.8, 7.8, 7.8, 7.8, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9 },
 									      { 0.0, 0.0, 2.6, 3.9, 3.9, 2.6, 2.6, 2.6, 2.6, 1.3, 0.0, 0.0, 0.0 },
 									      { 0.0, 0.0, 0.0, 0.0, 0.0, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 1.3, 1.3 },
+							 		      { 1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 0.8, 0.6 },
 							 		      { 0.8, 0.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 0.8, 0.8, 0.8, 0.8 } }; /*,
-							 		      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
 							 		      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } }; */
 
 // remaining nutrients
-float opt_nut_rem[NUTRIENTS] = { 946.0, 946.0, 946.0, 237.0 };
+float opt_nut_rem[NUTRIENTS] = { 946.0, 946.0, 946.0, 568.0, 237.0 };
 bool running_nut = false;
 #endif
 
@@ -74,8 +75,8 @@ char ser_output[64] = { };
 
 #ifdef _FLO
 volatile unsigned long h2o_ticks[2] = { 0, 0 };
-volatile unsigned long last_h2o_time[2] = { 0, 0 };
+volatile unsigned long h2o_last_millis[2] = { 0, 0 };
 
 volatile unsigned long h2o_ticks_total[2] = { 0, 0 };
-volatile unsigned long h2o_time_total[2] = { 0, 0 };
+volatile unsigned long h2o_millis_total[2] = { 0, 0 };
 #endif

@@ -248,18 +248,18 @@ void read_rtc() {
 	RTC.read(tm);
  #ifdef SERIAL_OUT_VERBOSE
 	Serial.print(F("Ok, Time = "));
-    print2digits(tm.Hour);
-    Serial.write(':');
-    print2digits(tm.Minute);
-    Serial.write(':');
-    print2digits(tm.Second);
-    Serial.print(F(", Date (D/M/Y) = "));
-    Serial.print(tm.Day);
-    Serial.write('/');
-    Serial.print(tm.Month);
-    Serial.write('/');
-    Serial.print(tmYearToCalendar(tm.Year));
-    Serial.println();
+	print2digits(tm.Hour);
+	Serial.write(':');
+	print2digits(tm.Minute);
+	Serial.write(':');
+	print2digits(tm.Second);
+	Serial.print(F(", Date (D/M/Y) = "));
+	Serial.print(tm.Day);
+	Serial.write('/');
+	Serial.print(tm.Month);
+	Serial.write('/');
+	Serial.print(tmYearToCalendar(tm.Year));
+	Serial.println();
  #endif
 }
 #endif // _RTC
@@ -483,7 +483,7 @@ void setup_ram() {
 			//Serial.println(set_buffer[i]);
 		}
 		
-		for (int i = 0; i < 512; ++i) {
+		for (int i = 0; i < 64; ++i) {
 			// write random buffer to block address
 			Ram.writeBlock(i * BUFFER_SIZE, BUFFER_SIZE, set_buffer);
 			// read  block address
@@ -526,19 +526,19 @@ void setup_spi() {
  #ifdef SERIAL_OUT_VERBOSE
 	Serial.println(F("Setting up SPI bus"));
  #endif // SERIAL_OUT_VERBOSE
- 
- #ifdef _RAM
-	// RAM
-	//pinMode(SS_RAM, INPUT_PULLUP);
-	//digitalWrite(22, HIGH);
-	setup_ram();
- #else
- #endif // _RAM
 
  #ifdef _MMC
 	// SD card interface
 	setup_mmc();
  #endif // _MMC
+
+ #ifdef _RAM
+	// RAM
+	//pinMode(SS_RAM, INPUT_PULLUP);
+	//digitalWrite(SS_RAM, HIGH);
+	setup_ram();
+ #else
+ #endif // _RAM
  
  #ifdef SERIAL_OUT
 	Serial.println(F("Done with SPI bus"));
@@ -553,19 +553,41 @@ void setup_steppers() {
  #endif // SERIAL_OUT_VERBOSE
 	// 6 steppers, 4 wires each
 	uint8_t s;
-	for (s = 0; s < COUNT_STEPPERS; ++s) {
+	for (s = 0; s < COUNT_STEPPERS - NUTRIENTS; ++s) {
 		stepper[s] = PumpStepper(PumpStepper::HALF4WIRE, STEPPER_WIRES[s][0], STEPPER_WIRES[s][1], STEPPER_WIRES[s][2], STEPPER_WIRES[s][3]);
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
- #ifdef SERIAL_OUT_VERBOSE
-		Serial.print(F("Stepper "));
-		Serial.println(s);
+ #ifdef SERIAL_OUT
+		Serial.print(s);
+		Serial.println(F(" Stepper CONTINUOUS"));
  #endif // SERIAL_OUT_VERBOSE
 	}
+	
+	for ( ; s < COUNT_STEPPERS - (NUTRIENTS - 3); ++s) {
+		stepper[s] = PumpStepper(PumpStepper::SYRINGE, 69.0, 20.0, PumpStepper::HALF4WIRE, STEPPER_WIRES[s][0], STEPPER_WIRES[s][1], STEPPER_WIRES[s][2], STEPPER_WIRES[s][3], 0, 0, true);
+		stepper[s].setMaxSpeed(MAXSPEED);
+		steppers.addStepper(stepper[s]);
+ #ifdef SERIAL_OUT
+		Serial.print(s);
+		Serial.println(F(" Stepper SYRINGE H = 69.00 V = 20.0"));
+ #endif // SERIAL_OUT_VERBOSE
+	}
+	
+	for ( ; s < COUNT_STEPPERS; ++s) {
+		stepper[s] = PumpStepper(PumpStepper::SYRINGE, 47.75, 3.0, PumpStepper::HALF4WIRE, STEPPER_WIRES[s][0], STEPPER_WIRES[s][1], STEPPER_WIRES[s][2], STEPPER_WIRES[s][3], 0, 0, true);
+		stepper[s].setMaxSpeed(MAXSPEED);
+		steppers.addStepper(stepper[s]);
+ #ifdef SERIAL_OUT
+		Serial.print(s);
+		Serial.println(F(" Stepper SYRINGE H = 47.75 V =  3.0"));
+ #endif // SERIAL_OUT_VERBOSE
+	}
+	
 	for (uint8_t n = 0; n < NUTRIENTS; ++n) {
-		nut[n] = stepper[NUT_START + n];
+		nut[n] = stepper[COUNT_STEPPERS - NUTRIENTS + n];
 		nuts.addStepper(nut[n]);
 	}
+	
  #ifdef SERIAL_OUT
 	Serial.println(F("Steppers done"));
  #endif // SERIAL_OUT
@@ -909,7 +931,7 @@ bool check_alarm_flood() {
 #endif // _SEN
 
 float h2o_rate = 0;
-unsigned long h2o_time = 0;
+unsigned long h2o_millis = 0;
 
 #ifdef _FLO
 bool check_alarm_flow() {
@@ -1549,7 +1571,7 @@ void cache_log() {
   #ifdef _BME
 	tph_str
   #else
-    ""
+	""
   #endif // _BME
 	);
 	if (s == LOG_CACHE_SIZE) s = 0;
@@ -1631,10 +1653,13 @@ int check_schedule(int zone) {
 	time_t time_since_h2o = time_now - time_h2o;
 	need_h2o = time_since_h2o >= interv_h2o;
 	
-	// check if enough time has passed since low flow rate
+	// check if enough time has passed to feed
 	time_t time_since_nut = time_now - time_nut;
 	need_nut = time_since_nut >= interv_nut;
 
+	// check if enough time has passed since low flow rate
+	// TODO
+	
   #ifdef SERIAL_OUT
 	Serial.print(F("Weeks since zone start : "));
 	Serial.println(week);
@@ -1659,9 +1684,9 @@ void disable_steppers() {
 	unsigned long c_time = millis();
 	while (c_time + 1000 >= millis());
 	for (uint8_t s = 0; s < COUNT_STEPPERS; ++s) {
-		stepper[s].setSpeed(0);
+		stepper[s].stop();
 		stepper[s].setCurrentPosition(0);
-		stepper[s].disableOutputs();
+		//stepper[s].disableOutputs();
 	}
  #ifdef _H2O
 	running_h2o = false;
@@ -1669,7 +1694,7 @@ void disable_steppers() {
  #ifdef _NUT
 	running_nut = false;
  #endif
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SERIAL_OUT
 	Serial.println(F("Stopped steppers"));
  #endif
 }
@@ -1704,13 +1729,13 @@ void calculate_h2o_rate(uint8_t sensor) {
 	// calculate and return h2o rate mL / s from sensor
 	//delay(100);
 
-	unsigned long intv_time = millis() - last_h2o_time[sensor];
-	last_h2o_time[sensor] = millis();
+	unsigned long intv_time = millis() - h2o_last_millis[sensor];
+	h2o_last_millis[sensor] = millis();
 
 	// h2o_ticks[sensor] = 3;
 
 	h2o_ticks_total[sensor] += h2o_ticks[sensor];
-	h2o_time_total[sensor] += intv_time;
+	h2o_millis_total[sensor] += intv_time;
 
 	h2o_rate = calculate_rate(intv_time, h2o_ticks[sensor], cal_factor[sensor]);
 	
@@ -1752,13 +1777,13 @@ float calculate_n_speed(float s_rate) {
 
 #ifdef _H2O
 unsigned long set_h2o_rate(uint8_t s, float h2o_rate) { // rate in mL / sec
-	float h2o_pps = min(1000, calculate_n_speed(h2o_rate));
+	float h2o_sps = min(1000, calculate_n_speed(h2o_rate));
  #ifdef SERIAL_OUT_VERBOSE
-	Serial.print(F("set h2o pps rate: "));
-	Serial.println(h2o_pps);
+	Serial.print(F("set h2o sps rate: "));
+	Serial.println(h2o_sps);
  #endif
-	stepper[s].setSpeed(h2o_pps);
-	return (unsigned long) h2o_pps;
+	stepper[s].setSpeed(h2o_sps);
+	return (unsigned long) h2o_sps;
 }
 #endif // _H2O
 
@@ -1770,7 +1795,7 @@ void open_valve(int valve) {
 		}
  #ifdef _FLO
   #ifdef SERIAL_OUT
-		Serial.println(F("Stopping h2o"));
+		Serial.println(F("Close valves"));
   #endif
 		running_h2o = false;
  #endif // _FLO
@@ -1779,7 +1804,7 @@ void open_valve(int valve) {
 		digitalWrite(VALVES[valve], HIGH);
  #ifdef _FLO
   #ifdef SERIAL_OUT
-		Serial.println(F("Starting h2o"));
+		Serial.println(F("Open valve"));
   #endif
 		running_h2o = true;
  #endif // _FLO
@@ -1805,48 +1830,6 @@ bool execute_schedule(int zone, int week) {
 	if (check_alarms()) return false;
   #endif // _SEN
 	
-  #ifdef _NUT
-	float s_rate[NUTRIENTS]    = { 0, 0, 0, 0 };
-	float nut_ratio[NUTRIENTS] = { 0, 0, 0, 0 };
-	long positions[1+NUTRIENTS]  = { 0, 0, 0, 0, 0 };
-	positions[0] = (long) (opt_h2o_amt[0] * PULSE_PER_ML);
-	for (int n = 0; n < NUTRIENTS; ++n) {
-		nut_ratio[n] = opt_nut_ratio[n][week];
-   #ifdef _MMC
-		opt_nut_rem[n] = read_nut_rem_file(n);
-   #endif // _MMC
-		positions[n+1] = (long) (opt_nut_rem[n] * PULSE_PER_ML); // Array of desired stepper positions
-   #ifdef SERIAL_OUT
-		Serial.print(F("Nutrient "));
-		Serial.print(n);
-		Serial.print(F(" position: "));
-		Serial.println(positions[n+1]);
-   #endif // SERIAL_OUT
-		nut[n].enableOutputs();
-	}
-	steppers.moveTo(positions);
-	//nuts.moveTo(positions);
-
-   #ifdef _PWM
-	enable_mixers();
-   #endif // _PWM
-
-  #endif // _NUT
-
-  #ifdef _H2O
-	float h2o_amt = (float) opt_h2o_amt[week];
-	float h2o_rem_amt = h2o_amt;
-  #endif // _H2O
-
-  #ifdef _FLO
-	unsigned long h2o_sta_time = millis();		// milliseconds running of h2o
-	enable_flow_rate(true);
-	open_valve(zone);
-  #elif defined(_H2O)
-	set_h2o_rate(0, 10.0); // set stepper# & mL/s rate, returns pulses per second
-  #endif
-  	running_h2o = true;
-
   #if defined(_MMC) && defined(_LOG)
 	// Record start
 	loop_rtc();
@@ -1854,320 +1837,172 @@ bool execute_schedule(int zone, int week) {
 	write_zone_log_file("zone", zone, log_entry);
   #endif // defined(_MMC) && defined(_LOG)
 
-  #ifdef _FLO
-	while (h2o_sta_time + 1000 >= millis()) {
-		//delay(100);
-		calculate_h2o_rate(0);									// mL per sec h2o
-		// TODO check if rate is stable (part of alarm?)
-		if (check_alarms()) return false;
+  #ifdef _PWM
+	// Enable mixers
+	enable_mixers();
+	// Allow mixers time to spin up and mix nutrients
+	// TODO
+  #endif // _PWM
+
+	//PumpStepper h2o = stepper[0];
+
+	// Calculate required h2o and nutrient volume based on total h2o delivery
+	float h2o_amt = (float) opt_h2o_amt[week];
+		Serial.print(F("H2O "));
+		Serial.print(print_float(h2o_amt));
+		Serial.println(" mL");
+	// Calculate maximum h2o and nutrient pump rates, determine limiting rate
+	// For now, assume h2o is limiting
+	float h2o_time = 120; //h2o.getTimeToDispense(h2o_amt);
+
+	// Setup continuous pump dicharge parameters
+	stepper[0].setCurrentPosition(0);
+	stepper[0].setVolumeTime(h2o_amt, h2o_time);
+   #ifdef SERIAL_OUT
+	Serial.print(F("H2O "));
+	Serial.print(print_float(h2o_amt / (float) h2o_time));
+	Serial.println(" mL/sec");
+   #endif
+   
+	float nut_amt[NUTRIENTS] = {};
+	for (int n = 0; n < NUTRIENTS; ++n) {
+		nut_amt[n] = h2o_amt * opt_nut_ratio[n][week] / ML_L;
+   #ifdef SERIAL_OUT
+		Serial.print(F("Nutrient "));
+		Serial.print(n);
+		Serial.print(" ");
+		Serial.print(print_float(nut_amt[n]));
+		Serial.println(" mL");
+   #endif
+	}	
+
+	// Calculate fill rate for each syringe pump and fill it in minimum time.
+	for (int n = 0; n < NUTRIENTS; ++n) {
+		float n_time = nut[n].getTimeToDispense(nut_amt[n]);
+		nut[n].setVolumeTime(-(nut_amt[n]), n_time);	// Negative volume loads syringe pump
+		
+   #ifdef SERIAL_OUT
+		Serial.print(F("Fill Nutrient "));
+		Serial.print(n);
+		Serial.print(" ");
+		Serial.print(print_float(nut_amt[n] / n_time));
+		Serial.println(" mL/sec");
+   #endif
 	}
-  #endif // _FLO
-
-  #ifdef _SEN
-	bool alarm = false;
-	int alarm_code = 0;
-  #endif // _SEN
-
-  #if defined(_FLO) || defined(_H2O)
-
-	unsigned long last_h2o_time = millis();
-	//float h2o_amt_dis = 0;
 	
-	unsigned long oldPosition = 0;
+	unsigned long time_fill = millis();
+	// Fill syringe pumps and prepare to dispense
+	bool loading;
 	
 	do {
-		loop_rtc();
-
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-
-   #ifdef SERIAL_OUT_VERBOSE
-		Serial.println(F("Main loop"));
-   #endif // SERIAL_OUT_VERBOSE
-		if (running_h2o) {
-		
-   #ifdef SERIAL_OUT_VERBOSE
-			Serial.println(F("-> water"));
-   #endif // SERIAL_OUT_VERBOSE
-   
-   #ifdef _FLO
-			calculate_h2o_rate(0);
-			float h2o_amt_dis = h2o_ticks_total[0] / cal_factor[0];
-   #endif // _FLO
-   
-   #ifdef _H2O
-			while(running_nut && millis_run_loop + interv_run_loop < millis()) {
-				if (running_nut || running_h2o) running_h2o = steppers.run();
-			}
-			millis_run_loop = millis();
-
-			// Enable stepper and set rate variables
-			unsigned long h2o_time = millis() - last_h2o_time;
-			last_h2o_time = millis();
-
-			 // = h2o_pps * ((float) h2o_time / 1000.0); // in pulses per h2o_time interval
-			unsigned long h2o_pulses = stepper[0].currentPosition() - oldPosition;
- 			oldPosition = stepper[0].currentPosition();
-
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-
-			h2o_rate = calculate_rate(h2o_time, h2o_pulses, PULSE_PER_ML);
-			h2o_amt_dis += h2o_rate * ((float) h2o_time / 1000.0); // h2o_time in terms of (1 / seconds)
-   #endif // H2O
-   
-			h2o_rem_amt = max(0.0, h2o_amt - h2o_amt_dis);		// mL remaining of h2o
-   
-   #ifdef SERIAL_OUT_VERBOSE
-			Serial.print(F("h2o remaining: "));
-			Serial.println(h2o_rem_amt);
-   #endif // SERIAL_OUT_VERBOSE
-			// h2o_rem_time = 1.0 / (h2o_rate / h2o_rem_amt);								// seconds remaining of h2o
-
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-
-   #ifdef _SEN
-			// Check if alarms are triggered
-			alarm = check_alarms();
-    #ifdef SERIAL_OUT_VERBOSE
-			Serial.print(F("alarm: "));
-			Serial.println(alarm);
-    #endif // SERIAL_OUT_VERBOSE
-			if (alarm) {
-				alarm_code = 0;
-				alarm_code |= (alarm_int   ? 1  : 0);
-				alarm_code |= (alarm_flood ? 2  : 0);
-				//alarm_code |= (alarm_flow  ? 4  : 0);
-				alarm_code |= (alarm_soil  ? 8  : 0);
-				alarm_code |= (alarm_nut   ? 16 : 0);
-
-    #ifdef SERIAL_OUT
-				sprintf(ser_output, "ALARM: %d", alarm);
-				Serial.print(ser_output);
-    #endif // SERIAL_OUT
-			}
-
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-			
-			if (false
-    #ifdef _SEN
-				|| alarm 
-    #endif // _SEN
-    
-    #if defined(_FLO) || defined(_H2O)
-				// Allow extra water to flow to flush line
-				|| h2o_rem_amt <= 25
-    #endif // defined(_FLO) || defined(_H2O)
-				) {
-    #ifdef _NUT
-				running_nut = false;
-			} else {
-				// TODO check this logic
-				
-				//running_nut = nuts.run();
-    #endif // _NUT
-			}
-   #endif // _SEN
-			if (h2o_rem_amt <= 0) {
-				running_h2o = false;
-				open_valve(-1);
-			}
-
-   #ifdef SERIAL_OUT_VERBOSE
-			Serial.print(F("H2O flow rate is:"));
-			sprintf(ser_output, " %3d.%02d", (int) h2o_rate, (int) (h2o_rate * 100.0) % 100);
-			Serial.print(ser_output);
-			Serial.println(F(" mL / sec"));
-   #endif // SERIAL_OUT_VERBOSE
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-			sprintf(sch_display[0], "H2O %3d.%03d %4d/%4d", (int) h2o_rate, ((int) (h2o_rate * 1000.0)) % 1000, (int) h2o_rem_amt, (int) h2o_amt);
-
-   #ifdef _NUT
-			if (running_nut) {
-    #ifdef SERIAL_OUT_VERBOSE
-				Serial.println(F("-> nutrient"));
-    #endif // SERIAL_OUT_VERBOSE
-				while(running_nut && millis_run_loop + interv_run_loop < millis()) {
-					if (running_nut || running_h2o) running_h2o = steppers.run();
-				}
-				millis_run_loop = millis();
-				
-				for (uint8_t n = 0; n < NUTRIENTS; ++n) {
-				
-					if (running_nut || running_h2o) running_h2o = steppers.run();
-			
-					s_rate[n] = calculate_n_rate(nut_ratio[n], h2o_rate); //, h2o_amt, h2o_time);	// mL per sec nutrient
-					float s_speed = calculate_n_speed(s_rate[n]);									// steps per second
-
-    #ifdef SERIAL_OUT_VERBOSE
-					sprintf(ser_output, " %5s\n", print_float(s_rate[n]));
-					Serial.print(ser_output);
-					Serial.print(" mL / sec");
-					
-					sprintf(ser_output, " %3d", (int) s_speed);
-					Serial.print(ser_output);
-					Serial.println(F(" pulses / sec"));
-    #endif // SERIAL_OUT_VERBOSE
-					
-					if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-					sprintf(sch_display[NUT_START + n],
-					        "Nut%1d %2d.%03d %2d.%1d %4d",
-					        NUT_START + n,
-                            (int) s_rate[n],
-                            (int) (s_rate[n] * 1000.0) % 1000,
-                            (int) nut_ratio[n],
-                            (int) (nut_ratio[n] * 10.0) % 10,
-                            (int) (opt_nut_rem[n] - (nut[n].currentPosition() / PULSE_PER_ML)));
-					
-					// TODO Ensure that ratios remain correct
-					
-					nut[n].setSpeed(s_speed);
-					
-					// nut[n].setSpeed(MAXSPEED);
-					
-					running_nut = nuts.run();
-				}
-			} else {
-				for (uint8_t n = 0; n < NUTRIENTS; ++n) {
-    #ifdef SERIAL_OUT_VERBOSE
-					Serial.println(F("Stopping nutrients"));
-    #endif // SERIAL_OUT_VERBOSE
-					s_rate[n] = 0;
-					nut[n].setSpeed(0);
-					
-					sprintf(sch_display[n + 1],
-					        "Nut%1d %2d.%03d %2d.%1d %4d",
-					        n + 1,
-                            (int) s_rate[n],
-                            (int) (s_rate[n] * 1000.0) % 1000,
-                            (int) nut_ratio[n],
-                            (int) (nut_ratio[n] * 10.0) % 10,
-                            (int) (opt_nut_rem[n] - (nut[n].currentPosition() / PULSE_PER_ML)));
-				}
-			}
-   #endif // _NUT
-   
-   #ifdef SERIAL_OUT_VERBOSE
-			Serial.println(F(""));
-   #endif // SERIAL_OUT_VERBOSE	
-		} else {
-   #ifdef _NUT
-			running_nut = false;
-   #endif // _NUT
+		loading = false;
+		for (int n = 0; n < NUTRIENTS; ++n) {
+			loading = nut[n].runSpeedToPositionToStop() | loading;
+		} 
+		/*
+		for (int n = 0; n < NUTRIENTS; ++n) {
+			Serial.print(" ");
+			Serial.print(nut[n].currentPosition());
+			Serial.print(" ");
+			Serial.print(nut[n].getDispensedVolume());
 		}
-   #if defined(_MMC) && defined(_LOG)
-		// Record normal information to log file for zone
+		Serial.println();
+		*/
+	} while (loading);
+	Serial.print("Fill took ");
+	Serial.print(millis() - time_fill);
+	Serial.print(" millis.. ");
+	
+   #ifdef _PWM
+	disable_mixers();
+   #endif // _PWM
+	
+	Serial.println("Done Loading");
+	// Setup syringe dicharge parameters	
+	// Calculate volumes for phase 1, 2, and 3
+		// phase 1, just water, 1/5 of water volume
+		// phase ., nuts water, 3/5 of water volume, all nutrients
+		// phase 5, just water, 1/5 of water volume, flush lines of nutrients
+	int nut_time = ceil(h2o_time * (3.0 / 5.0));
+	for (int n = 0; n < NUTRIENTS; ++n) {
+		nut[n].setVolumeTime(nut_amt[n], nut_time);	// Positive volume empties syringe pump
+		// TODO check that max discharge rate is not exceeded and if it is, deal with it
+		
+		
+   #ifdef SERIAL_OUT
+		Serial.print(F("Discharge Nutrient "));
+		Serial.print(n);
+		Serial.print(" ");
+		Serial.print(print_float(nut_amt[n] / (float) nut_time));
+		Serial.println(" mL/sec");
+   #endif
+	}
+	Serial.println("Setup Discharge");
+	
+  #ifdef _SEN
+	//bool alarm = false;
+	//int alarm_code = 0;
+  #endif // _SEN
 
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		loop_rtc();
-		sprintf(log_entry, "%s %2d   ",
-			dttm_str,
-			alarm_code);
+	bool running_h2o;
+	float h2o_amt_dis = 0;
 
-		sprintf(&log_entry[24], "%s  ", print_float(sense_ph));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[34], "%s  ", print_float(sense_tds));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[44], "%s  ", print_float(sense_ec));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[54], "%s  ", print_float(sense_dox));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[64], "%s  ", print_float(h2o_rate));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[74], "%s  ", print_float(h2o_rem_amt));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[84], "%s  ", print_float(s_rate[0]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[94], "%s  ", print_float(s_rate[1]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[104], "%s  ", print_float(s_rate[2]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[114], "%s  ", print_float(s_rate[3]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[124], "%s  ", print_float(nut_ratio[0]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[134], "%s  ", print_float(nut_ratio[1]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[144], "%s  ", print_float(nut_ratio[2]));
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-		sprintf(&log_entry[154], "%s", print_float(nut_ratio[3]));
-		
-		write_zone_log_file("zone", zone, log_entry);
-		
-		if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-   #endif // defined(_MMC) && defined(_LOG)
-   #ifdef _DIS
-		if (millis_display_loop + interv_display_loop < millis()) {
-			millis_display_loop = millis();
-			display.clearDisplay();
-		
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-			display.setCursor(0, 0);
-			display.setTextSize(2);
-			display.print("Zone");
-		
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-			
-			display.setCursor(50, 0);
-			display.setTextSize(1,2);
-			display.print(zone);
-		
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-			display.setCursor(68, 0);
-			display.setTextSize(2);
-			display.print("Week");
-		
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-			
-			display.setCursor(116, 0);
-			display.setTextSize(1,2);
-			display.print(week);
-		
-			if (running_nut || running_h2o) running_h2o = steppers.run();
-		
-			display.setTextSize(1);
-			for (int i = 0; i < 6; ++i) {
-				display.setCursor(0, 16 + (i * 8));
-				display.print(sch_display[i]);
-		
-				if (running_nut || running_h2o) running_h2o = steppers.run();
-		
+	// open valve
+	open_valve(zone);
+
+	do {
+		// Run continuous stepper pump (h2o)
+		running_h2o = stepper[0].runSpeedToPositionToStop();
+		h2o_amt_dis = stepper[0].getDispensedVolume();
+
+		// determine phase
+		int phase = ceil(( h2o_amt_dis / h2o_amt ) * 5.0);
+
+		// Run syringe stepper pumps (nutrients) until empty (~ beginning last phase)
+		if (phase > 1) {
+			for (int n = 0; n < NUTRIENTS; n++) {
+		  		nut[n].runSpeedToPositionToStop();
 			}
-			display.display();
 		}
-   #endif // _DIS
-		if (running_nut || running_h2o) running_h2o = steppers.run();
+
+		long currentPosition = (long) stepper[0].currentPosition();
+		if (currentPosition % 1000 == 0) {
+			Serial.print(" ");
+			char currentPositionStr[6] = {};
+			sprintf(currentPositionStr, "%5ld", currentPosition);
+			Serial.print(currentPositionStr);
+			Serial.print(" ");
+			char h2o_amt_disStr[6] = {};
+			sprintf(h2o_amt_disStr, "%6.2f", (double) h2o_amt_dis);
+			Serial.print(h2o_amt_disStr);
+			Serial.print(" ");
+			for (int n = 0; n < NUTRIENTS; n++) {
+				float nut_amt_dis = nut[n].getDispensedVolume();
+				long nut_currentPosition = (long) nut[n].currentPosition();
+				Serial.print("| ");
+				char nut_currentPositionStr[6] = {};
+				sprintf(nut_currentPositionStr, "%5ld", nut_currentPosition);
+				Serial.print(nut_currentPositionStr);
+				Serial.print(" ");
+				char nut_amt_disStr[6] = {};
+				sprintf(nut_amt_disStr, "%6.2f", (double) nut_amt_dis);
+				Serial.print(nut_amt_disStr);
+				Serial.print(" ");
+			}
+			Serial.println();
+		}
+
+		// TODO measure pH and adjust rate for final nutrient (pH-Down)
+
+		// TODO Check alarms
+
+		// TODO Log output
+		
 	} while (running_h2o);
-  #endif // _NUT
+	
+	Serial.println("Done Discharging");
+	// ensure closed valves
+	open_valve(-1);
 
   #if defined(_MMC) && defined(_LOG)
 	// Record stop
@@ -2194,16 +2029,8 @@ bool execute_schedule(int zone, int week) {
 	}
 
 	disable_steppers();
-   #ifdef _PWM
-	disable_mixers();
-   #endif // _PWM
   #endif // _NUT
-	
-  #ifdef _FLO
-	enable_flow_rate(false);
-	h2o_ticks_total[0] = 0;
-  #endif // _FLO
-
+   
 	return true;
 }
  #endif // defined(_NUT) || defined(_FLO)
