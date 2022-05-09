@@ -26,6 +26,7 @@
 #define CONTINUOUS_R_H ((float) (1.0/CONTINUOUS_VOL_C))     		// rev / mm
 #define CONTINUOUS_HALFSTEP_RATIO ((float) (400.0))     			// steps / rev
 #define CONTINUOUS_STEPS_PER_MILLIMETER ( CONTINUOUS_VOL_RATIO * CONTINUOUS_HALFSTEP_RATIO * CONTINUOUS_R_H )
+#define CONTINUOUS_MAX_RATE ((float) 10.0)
 
 // SYRINGE Pump characteristics
 #define SYRINGE_R_H ((float) (1.0/0.5))          					// rev / mm
@@ -33,12 +34,12 @@
 #define SYRINGE_HALFSTEP_RATIO ((float) (400.0))     				// steps / REV
 #define SYRINGE_STEPS_PER_MILLIMETER ( SYRINGE_HALFSTEP_RATIO * SYRINGE_GEAR_RATIO * SYRINGE_R_H )
 
-
 //		200 × (9÷22) ÷ .5             =  163.63 steps / mm
 
 //		200 × (9÷22) ÷ .5 x 68.5 ÷ 20 =  560.45 steps / mL for 20mL syringe ~ 11,200 pulses
 //		200 × (9÷22) ÷ .5 x 46.3 ÷  3 = 2525.45 steps / mL for  3mL syringe ~  7,600 pulses
 
+#define SYRINGE_MAX_RATE ((float) 5.0) // in mm / sec
 #define SYRINGE_MAX_DISTANCE ((float) 70.0) // mm	
 #define SYRINGE_MAX_POSITION (SYRINGE_STEPS_PER_MILLIMETER * SYRINGE_MAX_DISTANCE) // steps ~ 11455
 

@@ -1685,7 +1685,7 @@ void disable_steppers() {
 	while (c_time + 1000 >= millis());
 	for (uint8_t s = 0; s < COUNT_STEPPERS; ++s) {
 		stepper[s].stop();
-		stepper[s].setCurrentPosition(0);
+		//stepper[s].setCurrentPosition(0);
 		//stepper[s].disableOutputs();
 	}
  #ifdef _H2O
@@ -1856,7 +1856,7 @@ bool execute_schedule(int zone, int week) {
 	float h2o_time = 120; //h2o.getTimeToDispense(h2o_amt);
 
 	// Setup continuous pump dicharge parameters
-	stepper[0].setCurrentPosition(0);
+	//stepper[0].setCurrentPosition(0);
 	stepper[0].setVolumeTime(h2o_amt, h2o_time);
    #ifdef SERIAL_OUT
 	Serial.print(F("H2O "));
@@ -1893,12 +1893,28 @@ bool execute_schedule(int zone, int week) {
 	unsigned long time_fill = millis();
 	// Fill syringe pumps and prepare to dispense
 	bool loading;
-	
+	int count = 0;
 	do {
 		loading = false;
 		for (int n = 0; n < NUTRIENTS; ++n) {
 			loading = nut[n].runSpeedToPositionToStop() | loading;
-		} 
+		}
+		
+		if (count % 1000 == 0) {
+			for (int n = 0; n < NUTRIENTS; n++) {
+				Serial.print(" ");
+				float nut_amt_dis = nut[n].getDispensedVolume();
+				long nut_currentPosition = (long) nut[n].currentPosition();
+				Serial.print("| ");
+				char nut_currentPositionStr[6] = {};
+				sprintf(nut_currentPositionStr, "%5ld", nut_currentPosition);
+				Serial.print(nut_currentPositionStr);
+				Serial.print(" ");
+				Serial.print(nut_amt_dis);
+			}
+			Serial.println("");
+		}
+		++count;
 		/*
 		for (int n = 0; n < NUTRIENTS; ++n) {
 			Serial.print(" ");

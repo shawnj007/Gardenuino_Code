@@ -11,7 +11,7 @@ PumpStepper::PumpStepper(	uint8_t interface,
 	
 	uint8_t type = PumpType::CONTINUOUS;
 	float   h = 52;
-	float	v = 3;	// Note that volume is negative here
+	float	v = 3;
 	
 	_type = type;
 		
@@ -26,7 +26,7 @@ PumpStepper::PumpStepper(	uint8_t interface,
 	_steps_per_milliliter = _steps_per_millimeter * _a1;
 	
 	_max_position = 0;
-	_max_rate = 10;
+	_max_rate = CONTINUOUS_MAX_RATE;
 	
 	_target_position = 0;
 	
@@ -84,7 +84,7 @@ PumpStepper::PumpStepper(	uint8_t type,
 	*/
 	
 	_max_position = h * _steps_per_millimeter;
-	_max_rate = 7.0;
+	_max_rate = SYRINGE_MAX_RATE;
 	
 	_target_position = 0;
 	

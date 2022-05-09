@@ -95,13 +95,23 @@ const uint8_t PWM[COUNT_PWM] = { 10 };
 #define MAXSPEED 1000
 #define COUNT_STEPPERS 6
 #define WIRES 4
-
-const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {{ 49, 48, 30, 31 },	// H2O
+/*
+const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {{ 48, 49, 30, 31 },	// H2O
                                                       { 44, 45, 46, 47 },	// PH UP	- PWM
                                                       { 40, 41, 42, 43 },	// NUT 2
                                                       { 36, 37, 38, 39 },	// NUT 1
                                                       { 32, 33, 34, 35 },	// NUT 4
                                                       { 66, 67, 68, 69 }};	// NUT 3
+*/                                                    
+
+// Note reversed order of two pins to reverse syringe pump direction
+const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {{ 48, 49, 30, 31 },	// H2O
+                                                      { 45, 44, 46, 47 },	// PH UP	- PWM
+                                                      { 41, 40, 42, 43 },	// NUT 2
+                                                      { 37, 36, 38, 39 },	// NUT 1
+                                                      { 33, 32, 34, 35 },	// NUT 4
+                                                      { 67, 66, 68, 69 }};	// NUT 3
+
 /* TODO: Change in 0.1e PCB version
 const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {
                                                       { 44, 45, 46, 47 },	// PH UP	- PWM
