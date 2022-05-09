@@ -1966,16 +1966,9 @@ bool execute_schedule(int zone, int week) {
 		}
 
 		long currentPosition = (long) stepper[0].currentPosition();
-		if (currentPosition % 1000 == 0) {
+		if (currentPosition % 200 == 0) {
 			Serial.print(" ");
 			char currentPositionStr[6] = {};
-			sprintf(currentPositionStr, "%5ld", currentPosition);
-			Serial.print(currentPositionStr);
-			Serial.print(" ");
-			char h2o_amt_disStr[6] = {};
-			sprintf(h2o_amt_disStr, "%6.2f", (double) h2o_amt_dis);
-			Serial.print(h2o_amt_disStr);
-			Serial.print(" ");
 			for (int n = 0; n < NUTRIENTS; n++) {
 				float nut_amt_dis = nut[n].getDispensedVolume();
 				long nut_currentPosition = (long) nut[n].currentPosition();
@@ -1984,11 +1977,13 @@ bool execute_schedule(int zone, int week) {
 				sprintf(nut_currentPositionStr, "%5ld", nut_currentPosition);
 				Serial.print(nut_currentPositionStr);
 				Serial.print(" ");
-				char nut_amt_disStr[6] = {};
-				sprintf(nut_amt_disStr, "%6.2f", (double) nut_amt_dis);
-				Serial.print(nut_amt_disStr);
-				Serial.print(" ");
+				Serial.print(nut_amt_dis);
 			}
+			Serial.print(" | ");
+			sprintf(currentPositionStr, "%5ld", currentPosition);
+			Serial.print(currentPositionStr);
+			Serial.print(" ");
+			Serial.print(h2o_amt_dis);
 			Serial.println();
 		}
 
