@@ -52,7 +52,7 @@ unsigned long interv_nut = 60;
 unsigned long millis_rtc;
 unsigned long millis_interv_rtc = 200;
 
-unsigned long millis_interv_sch = 60000;
+unsigned long millis_interv_sch = 6000;
 unsigned long millis_sch;
 #endif
 

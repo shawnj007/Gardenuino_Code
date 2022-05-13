@@ -100,6 +100,20 @@ INT0	21	D21		SCL		I2C Clock
   *    +---------------------+
   */
 
+ /* Screen layout
+  *     012345678901234567890
+  *    +---------------------+
+  * 0  |ZZOONNE i  WWEEEEK w |		Note: there are half-spaces
+  * 1  |ZZOONNE i  wWEEEEK W |		Note: there are half-spaces
+  * 2  |H2O  ml.sec  rem/totl|
+  * 3  |Nut1 ml.sec  m.L r.em|
+  * 4  |Nut2 ml.sec  m.L r.em|
+  * 5  |Nut3 ml.sec  m.L r.em|
+  * 6  |Nut4 ml.sec  m.L r.em|
+  * 7  |Nut5 ml.sec  m.L r.em|
+  *    +---------------------+
+  */
+
 // TODO System leak detection
 // TODO Low flow detection
 
@@ -1848,16 +1862,16 @@ bool execute_schedule(int zone, int week) {
 
 	// Calculate required h2o and nutrient volume based on total h2o delivery
 	float h2o_amt = (float) opt_h2o_amt[week];
-		Serial.print(F("H2O "));
-		Serial.print(print_float(h2o_amt));
-		Serial.println(" mL");
+	Serial.print(F("H2O "));
+	Serial.print(print_float(h2o_amt));
+	Serial.println(" mL");
 	// Calculate maximum h2o and nutrient pump rates, determine limiting rate
 	// For now, assume h2o is limiting
 	float h2o_time = 120; //h2o.getTimeToDispense(h2o_amt);
 
 	// Setup continuous pump dicharge parameters
 	//stepper[0].setCurrentPosition(0);
-	stepper[0].setVolumeTime(h2o_amt, h2o_time);
+	stepper[0].setVolumeTime(h2o_amt, h2o_time * 0.82);
    #ifdef SERIAL_OUT
 	Serial.print(F("H2O "));
 	Serial.print(print_float(h2o_amt / (float) h2o_time));
@@ -1893,13 +1907,16 @@ bool execute_schedule(int zone, int week) {
 	unsigned long time_fill = millis();
 	// Fill syringe pumps and prepare to dispense
 	bool loading;
+  #ifdef SERIAL_OUT_VERBOSE
 	int count = 0;
+  #endif
 	do {
 		loading = false;
 		for (int n = 0; n < NUTRIENTS; ++n) {
 			loading = nut[n].runSpeedToPositionToStop() | loading;
 		}
 		
+  #ifdef SERIAL_OUT_VERBOSE
 		if (count % 1000 == 0) {
 			for (int n = 0; n < NUTRIENTS; n++) {
 				Serial.print(" ");
@@ -1915,6 +1932,7 @@ bool execute_schedule(int zone, int week) {
 			Serial.println("");
 		}
 		++count;
+  #endif
 		/*
 		for (int n = 0; n < NUTRIENTS; ++n) {
 			Serial.print(" ");
@@ -1925,9 +1943,12 @@ bool execute_schedule(int zone, int week) {
 		Serial.println();
 		*/
 	} while (loading);
+	
+  #ifdef SERIAL_OUT
 	Serial.print("Fill took ");
 	Serial.print(millis() - time_fill);
 	Serial.print(" millis.. ");
+  #endif
 	
    #ifdef _PWM
 	disable_mixers();
@@ -1939,11 +1960,11 @@ bool execute_schedule(int zone, int week) {
 		// phase 1, just water, 1/5 of water volume
 		// phase ., nuts water, 3/5 of water volume, all nutrients
 		// phase 5, just water, 1/5 of water volume, flush lines of nutrients
-	int nut_time = ceil(h2o_time * (3.0 / 5.0));
+	int nut_time = floor(h2o_time * (3.0 / 5.0));
+	float s_rate[NUTRIENTS] = {};
 	for (int n = 0; n < NUTRIENTS; ++n) {
-		nut[n].setVolumeTime(nut_amt[n], nut_time);	// Positive volume empties syringe pump
+		s_rate[n] = nut[n].setVolumeTime(nut_amt[n], nut_time);	// Positive volume empties syringe pump
 		// TODO check that max discharge rate is not exceeded and if it is, deal with it
-		
 		
    #ifdef SERIAL_OUT
 		Serial.print(F("Discharge Nutrient "));
@@ -1953,7 +1974,10 @@ bool execute_schedule(int zone, int week) {
 		Serial.println(" mL/sec");
    #endif
 	}
+	
+  #ifdef SERIAL_OUT
 	Serial.println("Setup Discharge");
+  #endif
 	
   #ifdef _SEN
 	//bool alarm = false;
@@ -1966,6 +1990,12 @@ bool execute_schedule(int zone, int week) {
 	// open valve
 	open_valve(zone);
 
+	float nut_amt_dis[NUTRIENTS] = {0};
+  #ifdef SERIAL_OUT_VERBOSE
+	long nut_currentPosition[NUTRIENTS] = {0};
+  #endif
+	
+	unsigned long time_spill = millis();
 	do {
 		// Run continuous stepper pump (h2o)
 		running_h2o = stepper[0].runSpeedToPositionToStop();
@@ -1981,19 +2011,29 @@ bool execute_schedule(int zone, int week) {
 			}
 		}
 
+		if (millis_display_loop + interv_display_loop < millis()) {
+			for (int n = 0; n < NUTRIENTS; n++) {
+  #ifdef SERIAL_OUT_VERBOSE
+				nut_currentPosition[n] = (long) nut[n].currentPosition();
+  #endif
+				nut_amt_dis[n] = nut[n].getDispensedVolume();
+			}
+		}
+		
+  #ifdef SERIAL_OUT_VERBOSE
+		// Do less frequent Serial updates
 		long currentPosition = (long) stepper[0].currentPosition();
+		
 		if (currentPosition % 200 == 0) {
 			Serial.print(" ");
 			char currentPositionStr[6] = {};
 			for (int n = 0; n < NUTRIENTS; n++) {
-				float nut_amt_dis = nut[n].getDispensedVolume();
-				long nut_currentPosition = (long) nut[n].currentPosition();
 				Serial.print("| ");
 				char nut_currentPositionStr[6] = {};
-				sprintf(nut_currentPositionStr, "%5ld", nut_currentPosition);
+				sprintf(nut_currentPositionStr, "%5ld", nut_currentPosition[n]);
 				Serial.print(nut_currentPositionStr);
 				Serial.print(" ");
-				Serial.print(nut_amt_dis);
+				Serial.print(nut_amt_dis[n]);
 			}
 			Serial.print(" | ");
 			sprintf(currentPositionStr, "%5ld", currentPosition);
@@ -2002,16 +2042,94 @@ bool execute_schedule(int zone, int week) {
 			Serial.print(h2o_amt_dis);
 			Serial.println();
 		}
+  #endif
 
-		// TODO measure pH and adjust rate for final nutrient (pH-Down)
+		// TODO measure pH and adjust rate for final nutrient (pH-Up)
 
 		// TODO Check alarms
 
 		// TODO Log output
 		
+		//loop_rtc();
+		//sprintf(log_entry, "%s %2d   ",
+		//	dttm_str,
+		//	0); // alarm_code
+		
+		// TODO measure pH, TDS, EC, dOx, 
+		
+		// TODO record measurements and h2o_rate, h2o_amt, nut_n_rate, nut_n_amt
+		float h2o_rate = (float) h2o_amt / (float) h2o_time;
+		float h2o_rate_real = (float) h2o_amt_dis / ((float) (millis() - time_spill) / 1000.0);
+		float h2o_rem_amt = h2o_amt - h2o_amt_dis;
+		
+   #ifdef _DIS
+		// Display to i2c
+		if (millis_display_loop + interv_display_loop < millis()) {
+			millis_display_loop = millis();
+			float nut_rem_amt[NUTRIENTS] = {0};
+			
+			for (uint8_t n = 0; n < NUTRIENTS; ++n) {
+				nut_rem_amt[n] = -(nut_amt_dis[n]);
+			}
+			
+			sprintf(sch_display[0],
+				"W %2d.%1d %2d.%1d %4d/%4d",
+				(int) h2o_rate_real,
+				((int) (h2o_rate_real * 10.0)) % 10,
+				(int) h2o_rate,
+				((int) (h2o_rate * 10.0)) % 10,
+				(int) h2o_rem_amt,
+				(int) h2o_amt);
+			
+			for (uint8_t n = 0; n < NUTRIENTS; ++n) {
+				bool running = ((phase > 1) && (nut[n].targetPosition() != nut[n].currentPosition()));
+				
+				sprintf(sch_display[NUT_START + n],
+						"Nut%1d %2d.%03d %2d.%01d %1d.%02d",
+						NUT_START + n,
+				        (running ? (int) s_rate[n] : 0),
+				        (running ? (int) (s_rate[n] * 1000.0) % 1000 : 0),
+				        (running ? (int) opt_nut_ratio[n][week] : 0),
+				        (running ? (int) (opt_nut_ratio[n][week] * 10.0) % 10 : 0),
+				        (int) (nut_rem_amt[n]),
+				        (int) (nut_rem_amt[n] * 100.0) % 100);
+			}
+			
+			// TODO, clear partial instead
+			display.clearDisplay();
+			display.setCursor(0, 0);
+			display.setTextSize(2);
+			display.print("Zone");
+			
+			display.setCursor(50, 0);
+			display.setTextSize(1,2);
+			display.print(zone);
+			
+			display.setCursor(68, 0);
+			display.setTextSize(2);
+			display.print("Week");
+			
+			display.setCursor(116, 0);
+			display.setTextSize(1,2);
+			display.print(week);
+			
+			display.setTextSize(1);
+			for (int i = 0; i < 6; ++i) {
+				display.setCursor(0, 16 + (i * 8));
+				display.print(sch_display[i]);
+			}
+			display.display();
+		}
+	#endif
 	} while (running_h2o);
+
+  #ifdef SERIAL_OUT
+	Serial.print("Spill took ");
+	Serial.print(millis() - time_spill);
+	Serial.print(" millis.. ");
 	
 	Serial.println("Done Discharging");
+  #endif
 	// ensure closed valves
 	open_valve(-1);
 
@@ -2104,7 +2222,7 @@ void loop() {
 	// record_environment
 	record_log();
 #endif // defined(_MMC) && defined(_LOG)
-
+	
 #ifdef _RTC
 	if (millis_sch + millis_interv_sch < millis()) {
 		millis_sch = millis();

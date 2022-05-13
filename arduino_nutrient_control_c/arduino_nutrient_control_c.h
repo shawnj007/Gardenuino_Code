@@ -88,7 +88,7 @@ const uint8_t PWM[COUNT_PWM] = { 10 };
 #ifdef _NUT
 #define PH_PUMP 0
 #define H2O_PUMP 1
-#define NUT_START 2
+#define NUT_START 1	// for screen display
 #define NUTRIENTS 5
 #endif
 
@@ -232,7 +232,7 @@ char alarm_state[20] = "FLOODFLOWNUTSOILENV";
 
 #ifdef _DIS
 unsigned long millis_display_loop;
-unsigned long interv_display_loop = 1000;
+unsigned long interv_display_loop = 3000;
 #endif // _DIS
 
 #ifdef _BME

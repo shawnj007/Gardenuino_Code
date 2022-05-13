@@ -18,7 +18,7 @@
 //#define MILLIMETER_PER_MILLILITER A1
 
 // CONTINUOUS Pump characteristics
-#define CONTINUOUS_VOL_RATIO ((float) (2.0 / 3.0))					// Losses to "Squeeze" sections in pump
+#define CONTINUOUS_VOL_RATIO ((float) (3.0 / 3.0))					// Losses to "Squeeze" sections in pump
 
 #define CONTINUOUS_VOL_R ((float) 16.20)							//  16.200 mm - radius of tube in pump
 #define CONTINUOUS_VOL_C ((float) 2.0 * 3.14159 * CONTINUOUS_VOL_R)	// 101.788 mm - circumfrance of tube in pump
@@ -92,8 +92,8 @@ public:
 				uint8_t stop_b = 7,
 				bool enable = true);
 	
-	void setMaxRate(float rate);
-	void setVolumeTime(float milliliters, float seconds);
+	float setMaxRate(float rate);
+	float setVolumeTime(float milliliters, float seconds);
 
 	long currentPosition();
 	

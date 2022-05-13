@@ -95,15 +95,17 @@ PumpStepper::PumpStepper(	uint8_t type,
 	_pin_stop[DIRECTION_BACKWARD] = stop_b;
 }
 
-void PumpStepper::setMaxRate(float rate) { // rate in mL / seconds
+float PumpStepper::setMaxRate(float rate) { // rate in mL / seconds
+	// TODO check max speed (internal)
 	float speed = _steps_per_millimeter * _a1 * rate; // steps / second
 	//Serial.print("speed ");
 	//Serial.println(speed);
 	_as.setMaxSpeed(speed);
 	_as.setSpeed(speed);
+	return speed;
 }
 
-void PumpStepper::setVolumeTime(float milliliters, float seconds) {
+float PumpStepper::setVolumeTime(float milliliters, float seconds) {
 	/*
 	Serial.print(" milliliters ");
 	Serial.print(milliliters);
@@ -140,7 +142,16 @@ void PumpStepper::setVolumeTime(float milliliters, float seconds) {
 	*/
 	
 	_as.moveTo(_target_position);
+	
+	//float speed = 
 	setMaxRate(rate);
+	
+	/*
+	Serial.print(" setting speed ");
+	Serial.print(speed);
+	*/
+	
+	return rate;
 }
 
 long PumpStepper::currentPosition() {
