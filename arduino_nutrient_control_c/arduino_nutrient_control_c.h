@@ -1,5 +1,5 @@
 // Serial debug output
-#define SERIAL_OUT
+//#define SERIAL_OUT
 //#define SERIAL_OUT_VERBOSE
 
 // *****************
@@ -9,12 +9,12 @@
 #define _RTC  // Real time clock
 #define _BME  // Temperature/Pressure/Humidity
 #define _KEY  // 4x4 key interface
-//#define _RAM  // Random Access Memory expansion
+#define _RAM  // Random Access Memory expansion
 #define _MMC  // SD card reader
 #define _SEN  // Sensors
 #define _FLO  // Flow rate sensors for h2o (used for leak awareness, and h2o volume delivery watchdog, NOT used for nutrient delivery mixing)
 #define _H2O  // Stepper control for h2o (used for nutrient delivery mixing)
-#define _PWM  // Pulse width modulation (Motor speed) control
+#define _PWM  // Pulse width modulation (Motor speed) control for stirrers
 #define _VAL  // Valves/Solenoids
 #define _NUT  // Stepper control for nutrients
 #define _DO_HW_CHECK

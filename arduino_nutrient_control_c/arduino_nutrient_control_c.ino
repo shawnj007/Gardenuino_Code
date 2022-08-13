@@ -1,9 +1,20 @@
-// Dependencies
-// Adafruit SSD_1306
-// Adafruit BME280
-// TimeLib
-// DS1307RTC
-// Adafruit PCF8574
+//
+// Standard Dependencies
+// -----------------------
+// Adafruit BME280		(Temperature, Humidity, Pressure Sensor)
+// DS1307RTC			(Real-time Clock)
+// TimeLib				(Time Macros)
+// Adafruit PCF8574		(I/O extender)
+//
+// Modified Dependencies
+// -----------------------
+// SRAM 23LC 			(Modified to invert SS and expose the Ram variable)
+// Adafruit SSD_1306 	(Modifed to use RAM for display memory)
+//
+// Brand new Dependencies
+// -----------------------
+// Pump Stepper			(Syringe- and Peristaltic- pump control)
+//
 
 #include "arduino_nutrient_control_c.h"
 #include "arduino_nutrient_control_globals.h"
@@ -465,6 +476,7 @@ void setup_mmc() {
 #endif // _MMC
 
 #ifdef _RAM
+
 void setup_ram() {
  #ifdef SERIAL_OUT
 	Serial.println(F("Setting up RAM"));
@@ -540,6 +552,7 @@ void setup_ram() {
  #endif
 	}
 }
+
 #endif // _RAM
 
 #ifdef _SPI
