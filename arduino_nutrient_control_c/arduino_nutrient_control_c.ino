@@ -1,3 +1,10 @@
+// Dependencies
+// Adafruit SSD_1306
+// Adafruit BME280
+// TimeLib
+// DS1307RTC
+// Adafruit PCF8574
+
 #include "arduino_nutrient_control_c.h"
 #include "arduino_nutrient_control_globals.h"
 
@@ -104,7 +111,7 @@ INT0	21	D21		SCL		I2C Clock
   *     012345678901234567890
   *    +---------------------+
   * 0  |ZZOONNE i  WWEEEEK w |		Note: there are half-spaces
-  * 1  |ZZOONNE i  wWEEEEK W |		Note: there are half-spaces
+  * 1  |ZZOONNE i  WWEEEEK W |		Note: there are half-spaces
   * 2  |H2O  ml.sec  rem/totl|
   * 3  |Nut1 ml.sec  m.L r.em|
   * 4  |Nut2 ml.sec  m.L r.em|
@@ -1963,7 +1970,7 @@ bool execute_schedule(int zone, int week) {
 	int nut_time = floor(h2o_time * (3.0 / 5.0));
 	float s_rate[NUTRIENTS] = {};
 	for (int n = 0; n < NUTRIENTS; ++n) {
-		s_rate[n] = nut[n].setVolumeTime(nut_amt[n], nut_time);	// Positive volume empties syringe pump
+		nut[n].setVolumeTime(nut_amt[n], nut_time);	// Positive volume empties syringe pump
 		// TODO check that max discharge rate is not exceeded and if it is, deal with it
 		
    #ifdef SERIAL_OUT

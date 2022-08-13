@@ -9,7 +9,7 @@
 #define _RTC  // Real time clock
 #define _BME  // Temperature/Pressure/Humidity
 #define _KEY  // 4x4 key interface
-#define _RAM  // Random Access Memory expansion
+//#define _RAM  // Random Access Memory expansion
 #define _MMC  // SD card reader
 #define _SEN  // Sensors
 #define _FLO  // Flow rate sensors for h2o (used for leak awareness, and h2o volume delivery watchdog, NOT used for nutrient delivery mixing)
@@ -55,7 +55,7 @@ const uint8_t FLOOR_SENSE[COUNT_FLOOR] = { A0, A1 };
 const uint8_t HUMID_SENSE[COUNT_HUMID] = { A2, A3 };
 
 #define COUNT_PANS 4
-const uint8_t PANS_SENSE[COUNT_PANS] = { A4, A5, A6, A7};
+const uint8_t PANS_SENSE[COUNT_PANS] = { A4, A5, A6, A7 };
 
 #define COUNT_PLANTS 4
 const uint8_t PLANTS_SENSE[COUNT_PLANTS] = { A8, A9, A10, A11 };
@@ -181,14 +181,14 @@ Adafruit_BME280 bme;
  #endif // _RTC
 
  #ifdef _KEY
-#include "PCF8574.h"
+#include <PCF8574.h>
 PCF8574 keys((uint8_t) 0x20);
  #endif // _KEY
 
 #endif // _I2C
 
 #if defined(_NUT) || defined(_H2O)
-#include <PumpStepper.h>
+#include "PumpStepper.h"
 //#include <AccelStepper.h>
 #include <MultiStepper.h>
 #ifdef _NUT
@@ -254,7 +254,10 @@ float h;
 int ROW[4] = {P0, P1, P2, P3};
 int COL[4] = {P4, P5, P6, P7};
 
-uint8_t key_[4][4] = {{1, 2, 3, 10}, {4, 5, 6, 11}, {7, 8, 9, 12}, {15, 0, 14, 13}};
+uint8_t key_[4][4] = {{ 1, 2,  3, 10}, 
+                      { 4, 5,  6, 11},
+                      { 7, 8,  9, 12},
+                      {15, 0, 14, 13}};
 
 #define KEY_NO_PRESS 0
 #define KEY_NO_CHANGE 0

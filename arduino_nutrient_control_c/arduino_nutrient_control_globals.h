@@ -1,10 +1,16 @@
 // total mL
-int opt_h2o_amt[WEEKS]   = { 200, 300, 500, 750, 1000, 1000, 1500, 1500, 1500, 1500, 1200, 1000, 1000 };
-float cal_factor[2] = { 4.0, 4.0 };  // cal_factor = (ticks / mL)
+int opt_h2o_amt[WEEKS] = { 200, 300, 500, 750, 1000, 1000, 1500, 1500, 1500, 1500, 1200, 1000, 1000 };
 
+// cal_factor = (ticks / mL)
+float cal_factor[2] = { 4.0, 4.0 };
+
+// global status
 bool running_h2o = false;
 
 #ifdef _NUT
+// global status
+bool running_nut = false;
+
 // in mL per 1L
 #define ML_L 1000
 float opt_nut_ratio[NUTRIENTS][WEEKS] = { { 7.8, 7.8, 7.8, 7.8, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9 },
@@ -16,7 +22,6 @@ float opt_nut_ratio[NUTRIENTS][WEEKS] = { { 7.8, 7.8, 7.8, 7.8, 3.9, 3.9, 3.9, 3
 
 // remaining nutrients
 float opt_nut_rem[NUTRIENTS] = { 946.0, 946.0, 946.0, 568.0, 237.0 };
-bool running_nut = false;
 #endif
 
 //float cal_factor[2] = { 0.4875, 0.4875 };  // cal_factor = (ticks / mL)
