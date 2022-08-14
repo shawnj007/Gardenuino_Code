@@ -35,6 +35,11 @@ float opt_ec[13]        = {0.7, 0.7, 1.9, 2.5, 2.7, 2.7, 2.9, 2.9, 3.1, 2.6, 2.1
 
 //int opt_next_sch = 0;			// Incremented every 168 hours, not to go above 12
 
+#ifdef _H2O
+float h2o_rate = 0;
+unsigned long h2o_millis = 0;
+#endif
+
 #ifdef _SEN
 float sense_ph;
 float sense_tds;

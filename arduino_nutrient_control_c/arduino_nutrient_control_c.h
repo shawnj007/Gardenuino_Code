@@ -1,6 +1,109 @@
+//
+// Standard Dependencies
+// -----------------------
+// Adafruit BME280		(Temperature, Humidity, Pressure Sensor)
+// DS1307RTC			(Real-time Clock)
+// TimeLib				(Time Macros)
+// Adafruit PCF8574		(I/O extender, 4x4 keypad)
+//
+// Modified Dependencies
+// -----------------------
+// SRAM 23LC 			(Modified to invert SS and expose the Ram variable)
+// Adafruit SSD_1306 	(Modifed to use RAM for display memory)
+//
+// Brand new Dependencies
+// -----------------------
+// Pump Stepper			(Syringe- and Peristaltic- pump control)
+//
+
+/* Pin assignments
+ 
+ Arduino Mega 2560 
+
+VIN			
+VIN			
+GND			
+GND			
+5V			
+5V			
+3V3			
+3V3			
+AREF			
+RST			
+	 nc	0	RX			
+	 nc	1	TX			
+INT4	2	D2	PWM		FLOW1
+INT5	3	D3	PWM		Interrupt
+		4	D4	PWM	Q1	12V   7   BRs
+		5	D5	PWM	Q2	12V   8   BR
+		6	D6	PWM	Q3	12V   6   G
+		7	D7	PWM	Q4	12V   4   B
+		8	D8	PWM	Q5	12V   3   O
+		9	D9	PWM	Q6 	12V   1   Os
+		10	D10	PWM	Q7	12V   2   Gs
+	 nc	11	D11	PWM
+	 nc	12	D12	PWM 
+	 	13	D13	PWM	-> D47
+	 nc	14	D14
+	 nc	15	D15
+	 nc	16	D16
+	 nc	17	D17
+INT2 nc	19	D19				(KEY interrupt)
+INT1	20	D20		SDA		I2C Data
+INT0	21	D21		SCL		I2C Clock
+	 nc	22	D22		
+		23	D23		SS2		SPI MMC chip select / SPI Ram chip select
+	 nc	24	D24
+	 nc	25	D25
+	 nc	26	D26
+	 nc	27	D27
+	 nc	28	D28		
+	 nc	29	D29		
+	 	30	D30		J1-3	Motor 0 -3
+		31	D31		J1-4	Motor 0 -4
+		32	D32		J5-1	Motor 4 -1
+		33	D33		J5-2	Motor 4 -2
+		34	D34		J5-3	Motor 4 -3
+		35	D35		J5-4	Motor 4 -4
+		36	D36		J4-1	Motor 3 -1
+		37	D37		J4-2	Motor 3 -2
+		38	D38		J4-3	Motor 3 -3
+		39	D39		J4-4	Motor 3 -4
+		40	D40		J3-1	Motor 2 -1
+		41	D41		J3-2	Motor 2 -2
+		42	D42		J3-3	Motor 2 -3
+		43	D43		J3-4	Motor 2 -4
+		44	D44	PWM	J2-1	Motor 1 -1
+		45	D45	PWM	J2-2	Motor 1 -2
+		46	D46	PWM	J2-3	Motor 1 -3
+		47	D47	D13	J2-4	Motor 1 -4
+		48	D48		J1-2	Motor 0 -2
+		49	D49		J1-1	Motor 0 -1
+		50	D50		MISO	Slave out
+		51	D51		MOSI	Slave in
+		52	D52		SCK		Clock
+	 nc	53	D53		CS						* Not used for routing reasons
+		54	A0		JS2-7	Sense 0
+		55	A1		JS2-6	Sense 1
+		56	A2		JS2-5	Sense 2
+		57	A3		JS2-4	Sense 3
+		58	A4		JS2-3	Sense 4
+		59	A5		JS2-2	Sense 5
+		60	A6		JS1-7	Sense 6
+		61	A7		JS1-6	Sense 7
+		62	A8		JS1-5	Sense 8
+		63	A9		JS1-4	Sense 9
+		64	A10		JS1-3	Sense 10
+		65	A11		JS1-2	Sense 11
+		66	A12		J6-1	Motor 5 -1
+		67	A13		J6-2	Motor 5 -2
+		68	A14		J6-3	Motor 5 -3
+		69	A15		J6-4	Motor 5 -4
+ */
+
 // Serial debug output
-//#define SERIAL_OUT
-//#define SERIAL_OUT_VERBOSE
+#define SERIAL_OUT
+#define SERIAL_OUT_VERBOSE
 
 // *****************
 // HARDWARE enables
@@ -23,6 +126,7 @@
 // SOFTWARE enables
 // *****************
 #define _LOG
+//#define _MENU
 
 // I2C pin definitions
 #if defined(_DIS) || defined(_RTC) || defined(_BME) || defined(_KEY)
@@ -34,15 +138,15 @@
 // SPI pin definitions
 #if defined(_RAM) || defined(_MMC)
 #define _SPI
- #ifdef _RAM
-#define SS_RAM 53
- #endif
  #ifdef _MMC
 #define SS_MMC	23
  #endif
 #define MISO 	50
 #define MOSI 	51
 #define SCK 	52
+ #ifdef _RAM
+#define SS_RAM  53
+ #endif
 #endif // defined(_RAM) || defined(_MMC)
 
 // Sensor pins
@@ -85,12 +189,12 @@ const uint8_t PWM[COUNT_PWM] = { 10 };
 // Stepper pins
 #if defined(_NUT) || defined(_H2O)
 
-#ifdef _NUT
+ #ifdef _NUT
 #define PH_PUMP 0
 #define H2O_PUMP 1
 #define NUT_START 1	// for screen display
 #define NUTRIENTS 5
-#endif
+ #endif
 
 #define MAXSPEED 1000
 #define COUNT_STEPPERS 6
@@ -127,10 +231,10 @@ const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {
 // SPI device headers
 #ifdef _SPI
 #include <SPI.h>
- #ifdef _RAM
 
-//#include "SRAM_23LC.h"
-//SRAM_23LC Ram(&SPI, SS_RAM, SRAM_23LC512);
+ #if ( defined(_RAM) && !defined(_DIS) )
+#include "SRAM_23LC.h"
+SRAM_23LC Ram(&SPI, SS_RAM, SRAM_23LC512);
  #endif // _RAM
 
  #ifdef _MMC
@@ -151,15 +255,11 @@ SdFile   root;
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
-// FIXME
-
   #ifdef _RAM
 #include <Adafruit_SSD1306_ram.h>
   #else
 #include <Adafruit_SSD1306.h>
   #endif // _RAM
-
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire,
@@ -249,39 +349,6 @@ float h;
 #define PULSE_PER_ML ((float) 925)
 
 #define SEALEVELPRESSURE_HPA (1013.25)
-
-#ifdef _KEY
-int ROW[4] = {P0, P1, P2, P3};
-int COL[4] = {P4, P5, P6, P7};
-
-uint8_t key_[4][4] = {{ 1, 2,  3, 10}, 
-                      { 4, 5,  6, 11},
-                      { 7, 8,  9, 12},
-                      {15, 0, 14, 13}};
-
-#define KEY_NO_PRESS 0
-#define KEY_NO_CHANGE 0
-
-#define KEY_UP 2
-#define KEY_LT 4
-#define KEY_RT 6
-#define KEY_DN 8
-
-#define KEY_F1 11
-#define KEY_F2 12
-#define KEY_F3 13
-#define KEY_F4 14
-
-#define KEY_STOP  15
-#define KEY_START 16
-
-#define MENU_MAIN 0
-#define MENU_MANUAL 1
-
-float last_key = KEY_NO_PRESS;
-float menu_pos = 0; // fmt: XX.YY
-char menu_buff[8];
-#endif // _KEY
 
 #define SAMPLE_COUNT 10
 
