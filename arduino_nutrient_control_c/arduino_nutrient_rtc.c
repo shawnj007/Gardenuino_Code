@@ -4,7 +4,7 @@ time_t getDateTime(const char *str) {
 	int Year, Month, Day, Hour, Min, Sec;
 	tmElements_t dttm;
 	if (sscanf(str, "%d/%d/%d %d:%d:%d", &Year, &Month, &Day, &Hour, &Min, &Sec) != 6) {
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		sprintf(ser_output, "Failed to parse: %s\n", str);
 		Serial.print(ser_output);
  #endif
@@ -17,14 +17,14 @@ time_t getDateTime(const char *str) {
 	dttm.Minute = Min;
 	dttm.Second = Sec;
 	time_t time = makeTime(dttm);
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	sprintf(ser_output, "%s = %ld\n", str, (unsigned long) time);
 	Serial.print(ser_output);
  #endif
 	return time;
 }
 
- #if defined(SERIAL_OUT) || defined (SERIAL_OUT_VERBOSE)
+ #if defined(SER_OUT) || defined (SER_OUT_VERBOSE)
 void print2digits(int number) {
 	if (number >= 0 && number < 10) {
 		Serial.write("0");
@@ -35,7 +35,7 @@ void print2digits(int number) {
 
 void read_rtc() {
 	RTC.read(tm);
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.print(F("Ok, Time = "));
 	print2digits(tm.Hour);
 	Serial.write(':');
@@ -121,7 +121,7 @@ void setup_rtc() {
 				//config = true;
 			}
 		}
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("Set RTC."));
  #endif
 	} else {
@@ -132,13 +132,13 @@ void setup_rtc() {
 				char rtc_time_out[128];
 				RTC.read(tm);
 				sprintf(rtc_time_out, "%02d/%02d/%02d %2d:%02d:%02d", tmYearToCalendar(tm.Year)%100, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 				Serial.print(F("RTC time is: "));
 				Serial.println(rtc_time_out);
  #endif
 			}
 		}
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("FAILED: Could not set RTC!"));
  #endif
  #ifdef _DO_HW_CHECK

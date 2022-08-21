@@ -1,38 +1,14 @@
 
+#include "arduino_nutrient_key.h"
+
 #ifdef _KEY
 int ROW[4] = {P0, P1, P2, P3};
 int COL[4] = {P4, P5, P6, P7};
 
-uint8_t key_[4][4] = {{ 1, 2,  3, 10}, 
-                      { 4, 5,  6, 11},
-                      { 7, 8,  9, 12},
-                      {15, 0, 14, 13}};
-
-#define KEY_NO_PRESS 0
-#define KEY_NO_CHANGE 0
-
-#define KEY_UL 1
-#define KEY_UR 3
-#define KEY_DL 7
-#define KEY_DR 9
-
-#define KEY_CR 5
-
-#define KEY_UP 2
-#define KEY_LT 4
-#define KEY_RT 6
-#define KEY_DN 8
-
-#define KEY_F1 11
-#define KEY_F2 12
-#define KEY_F3 13
-#define KEY_F4 14
-
-#define KEY_STOP  15
-#define KEY_START 16
-
-#define MENU_MAIN 0
-#define MENU_MANUAL 1
+uint8_t key_[4][4] = {{ 1, 2,  3, 11}, 
+                      { 4, 5,  6, 12},
+                      { 7, 8,  9, 13},
+                      {15, 0, 10, 14}};
 
 float last_key = KEY_NO_PRESS;
 float menu_pos = 0; // fmt: XX.YY
@@ -45,11 +21,11 @@ void setup_key() {
 	}
 	
 	if (keys.begin()){
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("Keys passed!"));
  #endif
 	} else {
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("FAILED: Keys failed!"));
  #endif
  #ifdef _DO_HW_CHECK
@@ -63,9 +39,9 @@ uint8_t check_key() {
 	// check for key change
 	// return key value (if changed)
 	// else return 0 = no change, -1 = no key pressed
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.println(F("checking key"));
- #endif // SERIAL_OUT_VERBOSE
+ #endif // SER_OUT_VERBOSE
 	keys.readBuffer();
 	int row, col;
 	for (row = 0; row < 4; ++row) {
@@ -75,10 +51,10 @@ uint8_t check_key() {
 				uint8_t key_out = key_[row][col];
 				keys.digitalWrite(ROW[row], LOW);
 				if (key_out != last_key) {
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 					Serial.print(F("Key pressed:"));
 					Serial.println(key_out);
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 					last_key = key_out;
 					return key_out;
 				} else {
@@ -120,18 +96,18 @@ int display_menu(int menu, float menu_pos) {
 	return 0;
 }
 
-bool menu_loop(int menu) {
+int menu = 0;
 
-	int menu_pos = 0;
+bool menu_loop(int menu) {
 	
 	//check key (and respond in context)
-	int key = check_key();
-
+	uint8_t key = check_key();
+	
 	switch (key) {
 		// Enter menu
 		case KEY_START:
 			// Change to appropriate child-menu
-			int menu = select_menu(menu, menu_pos);
+			menu = select_menu(menu, menu_pos);
 			while (menu_loop(menu));
 			break;
 		case KEY_STOP:
@@ -191,7 +167,7 @@ bool f4_loop() {
 	return false;
 }
  
-void key_loop() {
+void loop_key() {
 	int key = check_key();
 
 	switch (key) {

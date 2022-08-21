@@ -1,28 +1,28 @@
 
 #ifdef _SEN
 void setup_sensors() {
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.println(F("Setting up sensors"));
- #endif // SERIAL_OUT_VERBOSE
+ #endif // SER_OUT_VERBOSE
 	// 12 analog sensors
 	for (uint8_t s = 0; s < COUNT_SENSORS; ++s) {
 		pinMode(SENSORS[s], INPUT);
 		analogWrite(SENSORS[s], LOW);
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 		Serial.print(F("Setup Sensor "));
 		Serial.println(s);
- #endif // SERIAL_OUT_VERBOSE
+ #endif // SER_OUT_VERBOSE
 	}
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	Serial.println(F("Sensors done"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 }
 
 bool check_alarm_flood() {
 	// TODO later design/build sensor
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	if (alarm_flood) Serial.println(F("ALARM\nALARM: flood\nALARM"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 	return alarm_flood;
 }
 
@@ -39,18 +39,18 @@ bool check_alarm_env() {
 	// Check environmental limits
 	// Check temperature limits
 	// Check humidity limits
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	if (alarm_env) Serial.println(F("ALARM\nALARM: environment\nALARM"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 	return alarm_env;
 }
 
 bool check_alarm_int() {
 	// TODO later design/build interrupt
 	// Check for interrupt
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	if (alarm_int) Serial.println(F("ALARM\nALARM: interrupt\nALARM"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 	return alarm_int;
 }
 
@@ -74,6 +74,7 @@ bool check_alarms() {
 }
 
 #endif // _SEN
+
 /*
 #ifdef _SEN
 		|| check_alarm_flood()
@@ -92,10 +93,12 @@ bool check_alarms() {
 
 #ifdef _FLO
 bool check_alarm_flow() {
+ #ifdef _H2O
 	if ((h2o_rate < FLOW_RATE_MIN) || (h2o_rate > FLOW_RATE_MAX)) alarm_flow = true;
- #ifdef SERIAL_OUT
+ #endif
+ #ifdef SER_OUT
 	if (alarm_flow) Serial.println(F("ALARM\nALARM: flow\nALARM"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 	return alarm_flow;
 }
 #endif // _FLO

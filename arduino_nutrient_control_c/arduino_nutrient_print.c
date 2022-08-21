@@ -5,12 +5,12 @@ char f_str[12];
 
 char *print_float(float f) {
 	sprintf(f_str, "%5ld.%03ld",  (long)f, (long)(f*1000)%1000);
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.print(F("Converting "));
 	Serial.print(f);
 	Serial.print(F(" to "));
 	Serial.println(f_str);
- #endif // SERIAL_OUT_VERBOSE
+ #endif // SER_OUT_VERBOSE
 	return f_str;
 }
 
@@ -46,7 +46,7 @@ void print_inputs() {
 #ifdef _BME
 void print_sensors() {
 
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.print(F("Temperature = "));
 	Serial.print(t);
 	Serial.println(F(" °C"));
@@ -60,7 +60,7 @@ void print_sensors() {
 	Serial.println(F(" %"));
 	
 	Serial.println();
- #endif // SERIAL_OUT_VERBOSE
+ #endif // SER_OUT_VERBOSE
 	//sprintf(tph_str, "%6.2f*C %6.2hP %6.2%%\n", t, p, h);
 	sprintf(t_str, "%4d.%01doC",  (int)t, (int)(t*10)%10);
 	sprintf(p_str, "%4d.%01dhP",  (int)p, (int)(p*10)%10);

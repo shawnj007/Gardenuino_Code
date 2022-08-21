@@ -1,0 +1,49 @@
+/*
+System status
+	Idle screen
+	Water screen (auto)
+
+System control
+	Water On/Off
+	Nutrient On/Off
+	Auto pH On/Off
+	Log On/Off
+
+System records
+	pH, TDS, EC, dOx
+	Temp, Pressure, Humidity
+	Flood, Pans, Plants
+
+Water / Nutrient Schedule
+	Field - Minimum H2O interval
+	Field - Maximum H2O interval
+
+Water / Nutrient Ratio Control
+	Field - Week
+		Field - Water Amt			mL			opt_h2o_amt
+		Field - Nutratio_1			mL / L		opt_nut_ratio
+		.
+		Field - Nutratio_n
+		
+Water / Nutrient Balance Control
+	Field - Week
+		Field - TDS
+		Field - pH
+		Field - EC
+		Field - dOx
+	
+Water / Nutrient Records
+	Field - Zone
+		Field - Week
+			Field - Water Amt		mL
+			Field - Nutratio_1		mL / L
+			.
+			Field - Nutratio_n
+			pH, TDS, EC, dOx
+
+Nutrient Amount Remaining
+	Field - Nutrient_1				mL			opt_nut_rem
+	.
+	Field - Nutrient_n
+	
+*/

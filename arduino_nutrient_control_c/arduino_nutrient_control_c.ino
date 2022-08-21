@@ -10,9 +10,24 @@
 #include "arduino_nutrient_key.c"
 #include "arduino_nutrient_sen.c"
 #include "arduino_nutrient_out.c"
+//#include "arduino_nutrient_menu.cpp"
 
 // TODO System leak detection
 // TODO Low flow detection
+
+bool running_h2o = false;
+bool running_nut = false;
+
+int opt_h2o_amt[WEEKS] = { 200, 300, 500, 750, 1000, 1000, 1500, 1500, 1500, 1500, 1200, 1000, 1000 };
+
+float opt_nut_ratio[NUTRIENTS][WEEKS] = { { 7.8, 7.8, 7.8, 7.8, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9 },
+										  { 0.0, 0.0, 2.6, 3.9, 3.9, 2.6, 2.6, 2.6, 2.6, 1.3, 0.0, 0.0, 0.0 },
+										  { 0.0, 0.0, 0.0, 0.0, 0.0, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 1.3, 1.3 },
+										  { 1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 0.8, 0.6 },
+										  { 0.8, 0.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 0.8, 0.8, 0.8, 0.8 } }; /*,
+										  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } }; */
+
+float opt_nut_rem[NUTRIENTS] = { 946.0, 946.0, 946.0, 568.0, 237.0 };
 
 #ifdef _I2C
 void setup_i2c() {
@@ -28,7 +43,7 @@ void setup_i2c() {
 
  #ifdef _BME
 	// THP sensor
-	setup_thp();
+	setup_bme();
  #endif
 
  #ifdef _KEY
@@ -40,7 +55,7 @@ void setup_i2c() {
 
 #ifdef _RAM
 void setup_ram() {
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	Serial.println(F("Setting up RAM"));
  #endif
 	uint32_t address = 0;
@@ -48,20 +63,20 @@ void setup_ram() {
 	//size_t ret = 
 	
 	Ram.begin();
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.print(F("set test value\n"));
 	Serial.println(set_byte);
  #endif
 	Ram.writeByte(address, set_byte);
 	
 	uint8_t get_byte = Ram.readByte(address);
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.print(F("get test value\n"));
 	Serial.println(get_byte);
  #endif
 	if (set_byte == get_byte) {
 	
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("RAM byte read/write passed"));
  #endif
 		size_t BUFFER_SIZE = 32;
@@ -70,7 +85,7 @@ void setup_ram() {
 		
 		//uint8_t j = 0;
 
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 		Serial.print(F("set test block:\n"));
  #endif
 		for (size_t i = 0; i < BUFFER_SIZE; i++) {
@@ -90,7 +105,7 @@ void setup_ram() {
 			for (size_t j = 0; j < BUFFER_SIZE; ++j) {
 				//Serial.print(get_buffer[j]);
 				if (get_buffer[j] != set_buffer[j]) {
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 					Serial.println(F("FAILED: Ram test"));
  #endif
  #ifdef _DO_HW_CHECK
@@ -102,11 +117,11 @@ void setup_ram() {
 		}
 		
 		//size_t ret = 
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		if (!failed_ram) Serial.println(F("RAM block read/write passed"));
  #endif
 	} else {
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("FAILED: RAM byte read/write failed"));
  #endif
  #ifdef _DO_HW_CHECK
@@ -119,9 +134,9 @@ void setup_ram() {
 
 #ifdef _SPI
 void setup_spi() {
- #ifdef SERIAL_OUT_VERBOSE
+ #ifdef SER_OUT_VERBOSE
 	Serial.println(F("Setting up SPI bus"));
- #endif // SERIAL_OUT_VERBOSE
+ #endif // SER_OUT_VERBOSE
 
  #ifdef _MMC
 	// SD card interface
@@ -136,17 +151,17 @@ void setup_spi() {
  #else
  #endif // _RAM
  
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 	Serial.println(F("Done with SPI bus"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 }
 #endif // _SPI
 
 void setup() {
-#ifdef SERIAL_OUT
+#ifdef SER_OUT
 	Serial.begin(230400);
 	Serial.println(F("Setup Start"));
-#endif // SERIAL_OUT
+#endif // SER_OUT
 
 #ifdef _SPI
 	setup_spi();
@@ -176,7 +191,7 @@ void setup() {
 	setup_flow_rate();
 #endif
 
-#ifdef SERIAL_OUT
+#ifdef SER_OUT
 	Serial.println(F("Setup Done"));
 #endif
 
@@ -184,7 +199,7 @@ void setup() {
 	read_config_files();
 #endif
 
-#ifdef SERIAL_OUT
+#ifdef SER_OUT
 	Serial.println(F("Config Done"));
 #endif
 
@@ -220,10 +235,10 @@ int check_schedule(int zone) {
 	// Compute which scheduled week to run, verify in range
 	int week = (int) ((time_now - time_sta) / SECS_PER_WEEK);
 	if (week < 0 || week >= WEEKS) {
-  #ifdef SERIAL_OUT
+  #ifdef SER_OUT
 		sprintf(ser_output, "Zone: %d - Week computed as: %d\n", zone, week);
 		Serial.println(ser_output);
-  #endif // SERIAL_OUT
+  #endif // SER_OUT
 		return -1; // TODO set alarm
 	}
 
@@ -233,12 +248,12 @@ int check_schedule(int zone) {
 	
 	// check if enough time has passed to feed
 	time_t time_since_nut = time_now - time_nut;
-	need_nut = time_since_nut >= interv_nut;
+	need_nut = interv_nut <= time_since_nut;
 
 	// check if enough time has passed since low flow rate
 	// TODO
 	
-  #ifdef SERIAL_OUT
+  #ifdef SER_OUT
 	Serial.print(F("Weeks since zone start : "));
 	Serial.println(week);
 	
@@ -247,7 +262,7 @@ int check_schedule(int zone) {
 	
 	Serial.print(F("Seconds since last nut : "));
 	Serial.println(time_since_nut);
-  #endif // SERIAL_OUT
+  #endif // SER_OUT
 	if (need_h2o) {
 		return week;
 	} else {
@@ -265,10 +280,10 @@ unsigned long interv_run_loop = 300;
 #ifdef _RTC
  #if defined(_NUT) || defined(_FLO)
 bool execute_schedule(int zone, int week) {
-  #ifdef SERIAL_OUT
+  #ifdef SER_OUT
 	sprintf(ser_output, "Starting zone %d week %d", zone, week);
 	Serial.println(ser_output);
-  #endif // SERIAL_OUT
+  #endif // SER_OUT
 
   #ifdef _SEN
 	// Check alarms, do nothing if any are set
@@ -293,18 +308,21 @@ bool execute_schedule(int zone, int week) {
 
 	// Calculate required h2o and nutrient volume based on total h2o delivery
 	float h2o_amt = (float) opt_h2o_amt[week];
+  #ifdef SER_OUT
 	Serial.print(F("H2O "));
 	Serial.print(print_float(h2o_amt));
 	Serial.println(" mL");
+  #endif
 	// Calculate maximum h2o and nutrient pump rates, determine limiting rate
 	// For now, assume h2o is limiting
+	
 	float h2o_time = 120; //h2o.getTimeToDispense(h2o_amt); // FIXME?
-	float h2o_rate = (float) h2o_amt / (float) h2o_time;
+	float h2o_rate_target = (float) h2o_amt / (float) h2o_time;
 	
 	// Setup continuous pump dicharge parameters
 	//stepper[0].setCurrentPosition(0);
-	stepper[0].setVolumeTime(h2o_amt, h2o_time * 0.82);
-   #ifdef SERIAL_OUT
+	stepper[0].setVolumeTime(h2o_amt, h2o_time); // * 0.82);
+   #ifdef SER_OUT
 	Serial.print(F("H2O "));
 	Serial.print(print_float(h2o_amt / (float) h2o_time));
 	Serial.println(" mL/sec");
@@ -313,7 +331,7 @@ bool execute_schedule(int zone, int week) {
 	float nut_amt[NUTRIENTS] = {};
 	for (int n = 0; n < NUTRIENTS; ++n) {
 		nut_amt[n] = h2o_amt * opt_nut_ratio[n][week] / ML_L;
-   #ifdef SERIAL_OUT
+   #ifdef SER_OUT
 		Serial.print(F("Nutrient "));
 		Serial.print(n);
 		Serial.print(" ");
@@ -327,7 +345,7 @@ bool execute_schedule(int zone, int week) {
 		float n_time = nut[n].getTimeToDispense(nut_amt[n]);
 		nut[n].setVolumeTime(-(nut_amt[n]), n_time);	// Negative volume loads syringe pump
 		
-   #ifdef SERIAL_OUT
+   #ifdef SER_OUT
 		Serial.print(F("Fill Nutrient "));
 		Serial.print(n);
 		Serial.print(" ");
@@ -339,7 +357,7 @@ bool execute_schedule(int zone, int week) {
 	unsigned long time_fill = millis();
 	// Fill syringe pumps and prepare to dispense
 	bool loading;
-  #ifdef SERIAL_OUT_VERBOSE
+  #ifdef SER_OUT_VERBOSE
 	int count = 0;
   #endif
 	do {
@@ -348,7 +366,7 @@ bool execute_schedule(int zone, int week) {
 			loading = nut[n].runSpeedToPositionToStop() | loading;
 		}
 		
-  #ifdef SERIAL_OUT_VERBOSE
+  #ifdef SER_OUT_VERBOSE
 		if (count % 1000 == 0) {
 			for (int n = 0; n < NUTRIENTS; n++) {
 				Serial.print(" ");
@@ -376,7 +394,7 @@ bool execute_schedule(int zone, int week) {
 		*/
 	} while (loading);
 	
-  #ifdef SERIAL_OUT
+  #ifdef SER_OUT
 	Serial.print("Fill took ");
 	Serial.print(millis() - time_fill);
 	Serial.print(" millis.. ");
@@ -386,7 +404,9 @@ bool execute_schedule(int zone, int week) {
 	disable_mixers();
    #endif // _PWM
 	
+  #ifdef SER_OUT
 	Serial.println("Done Loading");
+  #endif
 	// Setup syringe dicharge parameters	
 	// Calculate volumes for phase 1, 2, and 3
 		// phase 1, just water, 1/5 of water volume
@@ -398,7 +418,7 @@ bool execute_schedule(int zone, int week) {
 		nut[n].setVolumeTime(nut_amt[n], nut_time);	// Positive volume empties syringe pump
 		// TODO check that max discharge rate is not exceeded and if it is, deal with it
 		
-   #ifdef SERIAL_OUT
+   #ifdef SER_OUT
 		Serial.print(F("Discharge Nutrient "));
 		Serial.print(n);
 		Serial.print(" ");
@@ -407,7 +427,7 @@ bool execute_schedule(int zone, int week) {
    #endif
 	}
 	
-  #ifdef SERIAL_OUT
+  #ifdef SER_OUT
 	Serial.println("Setup Discharge");
   #endif
 	
@@ -419,11 +439,13 @@ bool execute_schedule(int zone, int week) {
 	bool running_h2o;
 	float h2o_amt_dis = 0;
 
+  #ifdef _VAL
 	// open valve
 	open_valve(zone);
+  #endif
 
 	float nut_amt_dis[NUTRIENTS] = {0};
-  #ifdef SERIAL_OUT_VERBOSE
+  #ifdef SER_OUT_VERBOSE
 	long nut_currentPosition[NUTRIENTS] = {0};
   #endif
 	
@@ -455,13 +477,13 @@ bool execute_schedule(int zone, int week) {
   #ifdef _DIS
 		if (millis_display_loop + interv_display_loop < millis()) {
 			for (int n = 0; n < NUTRIENTS; n++) {
-   #ifdef SERIAL_OUT_VERBOSE
+   #ifdef SER_OUT_VERBOSE
 				nut_currentPosition[n] = (long) nut[n].currentPosition();
    #endif
 				nut_amt_dis[n] = nut[n].getDispensedVolume();
 			}
   
-   #ifdef SERIAL_OUT_VERBOSE
+   #ifdef SER_OUT_VERBOSE
 			// Do less frequent Serial updates
 			long currentPosition = (long) stepper[0].currentPosition();
 			
@@ -487,23 +509,24 @@ bool execute_schedule(int zone, int week) {
 		}
 
 		// TODO record measurements and h2o_rate, h2o_amt, nut_n_rate, nut_n_amt
-		//float h2o_rate = (float) h2o_amt / (float) h2o_time;
+		//float h2o_rate_target = (float) h2o_amt / (float) h2o_time;
+		
 		float h2o_rate_real = (float) h2o_amt_dis / ((float) (millis() - time_spill) / 1000.0);
 		float h2o_rem_amt = h2o_amt - h2o_amt_dis;
 		
 		// Display to i2c
 		if (millis_display_loop + interv_display_loop < millis()) {
 			millis_display_loop = millis();
-			water_loop(nut_amt_dis, 
-						sch_display,
-						h2o_rate_real,
-						h2o_rate,
-						h2o_rem_amt,
-						h2o_amt,
-						phase, 
-						s_rate,
-						week,
-						zone);
+			loop_display_water(nut_amt_dis, 
+								sch_display,
+								h2o_rate_real,
+								h2o_rate_target,
+								h2o_rem_amt,
+								h2o_amt,
+								phase, 
+								s_rate,
+								week,
+								zone);
 		}
 						
 		// TODO log sensor readouts to MMC
@@ -511,15 +534,18 @@ bool execute_schedule(int zone, int week) {
   #endif
 	} while (running_h2o);
 
-  #ifdef SERIAL_OUT
+  #ifdef SER_OUT
 	Serial.print("Spill took ");
 	Serial.print(millis() - time_spill);
 	Serial.print(" millis.. ");
 	
 	Serial.println("Done Discharging");
   #endif
+  
+  #ifdef _VAL
 	// ensure closed valves
 	open_valve(-1);
+  #endif
 
   #if defined(_MMC) && defined(_LOG)
 	// Record stop
@@ -556,6 +582,7 @@ bool execute_schedule(int zone, int week) {
 void loop() {
 
 #ifdef _RTC
+	// update RTC string and variables
 	loop_rtc();
 #endif // _RTC
 
@@ -566,32 +593,34 @@ void loop() {
 #endif // _SEN
 
 #ifdef _BME
-	sensor_loop();
+	// update Temp/Humidity/Pressure string and variables
+	loop_bme();
 #endif // _BME
 
 #if defined (_DIS) && ( defined(_RTC) || defined(_SEN) || defined(_BME) )
-	// display sensor readouts
-	display_loop();
+	// display sensor readouts and system status
+	loop_display_idle();
 #endif // defined (_DIS) && ( defined(_RTC) || defined(_SEN) || defined(_BME) )
 
 	// check key (and see if it is interrupt)
 #ifdef _MENU
  #ifdef _KEY
-	key_loop();
+ 	// check for key input
+	loop_key();
  #endif // _KEY
 #endif // _MENU
 
 #if defined(_MMC) && defined(_LOG)
 	// record_environment
-	record_log();
+	loop_log();
 #endif // defined(_MMC) && defined(_LOG)
 	
 #ifdef _RTC
 	if (millis_sch + millis_interv_sch < millis()) {
 		millis_sch = millis();
- #ifdef SERIAL_OUT
+ #ifdef SER_OUT
 		Serial.println(F("Checking schedule"));
- #endif // SERIAL_OUT
+ #endif // SER_OUT
 		for (int zone = 0; zone < ZONES; ++zone) {
  #if defined(_NUT) || defined(_FLO)
 			// check for and execute appropriate schedule

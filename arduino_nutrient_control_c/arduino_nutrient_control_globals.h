@@ -1,27 +1,64 @@
+#ifndef ARDUINO_NUTRIENT_CONTROL_GLOBALS_H
+#define ARDUINO_NUTRIENT_CONTROL_GLOBALS_H
+
+#if ( defined(_SPI) && defined(_RAM) && !defined(_DIS))
+SRAM_23LC Ram(&SPI, SS_RAM, SRAM_23LC512);
+#endif
+
+#ifdef _MMC
+Sd2Card  card;
+SdVolume volume;
+SdFile   root;
+#endif
+
+#if defined(_NUT) || defined(_H2O)
+PumpStepper nut[NUTRIENTS] = {};
+MultiStepper nuts;
+PumpStepper stepper[COUNT_STEPPERS] = {};
+MultiStepper steppers;
+#endif // defined(_NUT) || defined(_H2O)
+
+#ifdef _KEY
+PCF8574 keys((uint8_t) 0x20);
+#endif
+
+#ifdef _BME
+Adafruit_BME280 bme;
+#endif
+
+#ifdef _DIS
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire,
+  #ifdef _RAM
+//&Ram, (uint32_t) 0,
+  #endif // _RAM
+OLED_RESET);
+#endif
+
+#define WEEKS ((uint8_t) 13)
+
 // total mL
-int opt_h2o_amt[WEEKS] = { 200, 300, 500, 750, 1000, 1000, 1500, 1500, 1500, 1500, 1200, 1000, 1000 };
+extern int opt_h2o_amt[WEEKS];
 
 // cal_factor = (ticks / mL)
-float cal_factor[2] = { 4.0, 4.0 };
+//float cal_factor[2] = { 4.0, 4.0 };
 
 // global status
-bool running_h2o = false;
+extern bool running_h2o;
 
 #ifdef _NUT
 // global status
-bool running_nut = false;
+extern bool running_nut;
 
 // in mL per 1L
 #define ML_L 1000
-float opt_nut_ratio[NUTRIENTS][WEEKS] = { { 7.8, 7.8, 7.8, 7.8, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9, 3.9 },
-									      { 0.0, 0.0, 2.6, 3.9, 3.9, 2.6, 2.6, 2.6, 2.6, 1.3, 0.0, 0.0, 0.0 },
-									      { 0.0, 0.0, 0.0, 0.0, 0.0, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 1.3, 1.3 },
-							 		      { 1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 0.8, 0.6 },
-							 		      { 0.8, 0.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.9, 0.9, 0.8, 0.8, 0.8, 0.8 } }; /*,
-							 		      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } }; */
+extern float opt_nut_ratio[NUTRIENTS][WEEKS];
 
 // remaining nutrients
-float opt_nut_rem[NUTRIENTS] = { 946.0, 946.0, 946.0, 568.0, 237.0 };
+extern float opt_nut_rem[NUTRIENTS];
 #endif
 
 //float cal_factor[2] = { 0.4875, 0.4875 };  // cal_factor = (ticks / mL)
@@ -38,7 +75,7 @@ float opt_ec[13]        = {0.7, 0.7, 1.9, 2.5, 2.7, 2.7, 2.9, 2.9, 3.1, 2.6, 2.1
 #ifdef _H2O
 float h2o_rate = 0;
 unsigned long h2o_millis = 0;
-#endif
+#endif // _H2O
 
 #ifdef _SEN
 float sense_ph;
@@ -52,8 +89,8 @@ bool SET_RTC = false;
 tmElements_t check_tm;
 tmElements_t tm;
 
-char tm_str[11]   = "YYYY/MM/DD";
-char dt_str[9]    = "hh:mm:ss";
+char dt_str[9]    = "YY/MM/DD";
+char tm_str[9]    = "hh:mm:ss";
 char dttm_str[20] = "YYYY/MM/DD hh:mm:ss";
 
 unsigned long interv_h2o = 60; // in seconds
@@ -65,6 +102,53 @@ unsigned long millis_interv_rtc = 200;
 unsigned long millis_interv_sch = 6000;
 unsigned long millis_sch;
 #endif
+
+#ifdef _DO_HW_CHECK
+// Hardware check status
+bool failed_spi = false;
+bool failed_ram = false;
+bool failed_mmc = false;
+bool failed_dis = false;
+bool failed_bme = false;
+bool failed_rtc = false;
+bool failed_key = false;
+#endif // DO_HW_CHECK
+
+#ifdef _FLO
+bool alarm_flow  = false;
+#endif // _FLO
+
+#ifdef _H2O
+bool alarm_h2o   = false;
+#endif // _H2O
+
+#ifdef _NUT
+bool alarm_nut   = false;
+#endif // _NUT
+
+#ifdef _SEN
+bool alarm_flood = false;
+int  alarm_soil  = 0;
+bool alarm_env   = false;
+volatile bool alarm_int = false;
+char alarm_state[20] = "FLOODFLOWNUTSOILENV";
+#endif // _SEN
+
+#ifdef _DIS
+unsigned long millis_display_loop;
+unsigned long interv_display_loop = 3000;
+#endif // _DIS
+
+#ifdef _BME
+char t_str[9];
+char p_str[9];
+char h_str[9];
+char tph_str[32];
+
+float t;
+float p;
+float h;
+#endif // _BME
 
 #ifdef _LOG
 unsigned long millis_cache_log;
@@ -90,3 +174,5 @@ volatile unsigned long h2o_last_millis[2] = { 0, 0 };
 volatile unsigned long h2o_ticks_total[2] = { 0, 0 };
 volatile unsigned long h2o_millis_total[2] = { 0, 0 };
 #endif
+
+#endif // ARDUINO_NUTRIENT_CONTROL_GLOBALS_H

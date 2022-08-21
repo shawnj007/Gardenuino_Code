@@ -1,3 +1,6 @@
+#ifndef ARDUINO_NUTRIENT_CONTROL_C_H
+#define ARDUINO_NUTRIENT_CONTROL_C_H
+
 //
 // Standard Dependencies
 // -----------------------
@@ -41,44 +44,45 @@ INT5	3	D3	PWM		Interrupt
 		8	D8	PWM	Q5	12V   3   O
 		9	D9	PWM	Q6 	12V   1   Os
 		10	D10	PWM	Q7	12V   2   Gs
-	 nc	11	D11	PWM
-	 nc	12	D12	PWM 
-	 	13	D13	PWM	-> D47
-	 nc	14	D14
-	 nc	15	D15
-	 nc	16	D16
-	 nc	17	D17
-INT2 nc	19	D19				(KEY interrupt)
+	 	11	D11	PWM 		LED1
+		12	D12	PWM 		OPT(_EXT)
+	 	13	D13	PWM	->	 	D47
+		14	D14	TX	XDA		I2C auxiliary Data
+		15	D15	RX			(OPT)
+	 	16	D16		XCL		I2C auxiliary Clock
+	 	17	D17		GPSRX	GPS recieve
+INT3 	18	D18		PPS		GPS pulse per second
+INT2 	19	D19		GPSTX	GPS transmit
 INT1	20	D20		SDA		I2C Data
 INT0	21	D21		SCL		I2C Clock
-	 nc	22	D22		
-		23	D23		SS2		SPI MMC chip select / SPI Ram chip select
+	 	22	D22		SS_EXT	SPI external chip select 
+		23	D23		SS_INT	SPI internal MMC chip select / SPI Ram chip select
 	 nc	24	D24
 	 nc	25	D25
 	 nc	26	D26
 	 nc	27	D27
 	 nc	28	D28		
 	 nc	29	D29		
-	 	30	D30		J1-3	Motor 0 -3
-		31	D31		J1-4	Motor 0 -4
-		32	D32		J5-1	Motor 4 -1
-		33	D33		J5-2	Motor 4 -2
-		34	D34		J5-3	Motor 4 -3
-		35	D35		J5-4	Motor 4 -4
-		36	D36		J4-1	Motor 3 -1
-		37	D37		J4-2	Motor 3 -2
-		38	D38		J4-3	Motor 3 -3
-		39	D39		J4-4	Motor 3 -4
-		40	D40		J3-1	Motor 2 -1
-		41	D41		J3-2	Motor 2 -2
-		42	D42		J3-3	Motor 2 -3
-		43	D43		J3-4	Motor 2 -4
-		44	D44	PWM	J2-1	Motor 1 -1
-		45	D45	PWM	J2-2	Motor 1 -2
-		46	D46	PWM	J2-3	Motor 1 -3
-		47	D47	D13	J2-4	Motor 1 -4
-		48	D48		J1-2	Motor 0 -2
-		49	D49		J1-1	Motor 0 -1
+	 	30	D30		J2-3	Motor 0 -3
+		31	D31		J2-4	Motor 0 -4
+		32	D32		J6-1	Motor 4 -1	Nutrient 3
+		33	D33		J6-2	Motor 4 -2
+		34	D34		J6-3	Motor 4 -3
+		35	D35		J6-4	Motor 4 -4
+		36	D36		J3-1	Motor 3 -1	Nutrient 2
+		37	D37		J3-2	Motor 3 -2
+		38	D38		J3-3	Motor 3 -3
+		39	D39		J3-4	Motor 3 -4
+		40	D40		J4-1	Motor 2 -1	Nutrient 1
+		41	D41		J4-2	Motor 2 -2
+		42	D42		J4-3	Motor 2 -3
+		43	D43		J4-4	Motor 2 -4
+		44	D44	PWM	J1-1	Motor 1 -1	pH
+		45	D45	PWM	J1-2	Motor 1 -2
+		46	D46	PWM	J1-3	Motor 1 -3
+		47	D47	D13	J1-4	Motor 1 -4
+		48	D48		J2-2	Motor 0 -2
+		49	D49		J2-1	Motor 0 -1	H2O
 		50	D50		MISO	Slave out
 		51	D51		MOSI	Slave in
 		52	D52		SCK		Clock
@@ -95,15 +99,15 @@ INT0	21	D21		SCL		I2C Clock
 		63	A9		JS1-4	Sense 9
 		64	A10		JS1-3	Sense 10
 		65	A11		JS1-2	Sense 11
-		66	A12		J6-1	Motor 5 -1
-		67	A13		J6-2	Motor 5 -2
-		68	A14		J6-3	Motor 5 -3
-		69	A15		J6-4	Motor 5 -4
+		66	A12		J5-1	Motor 5 -1	Nutrient 4
+		67	A13		J5-2	Motor 5 -2
+		68	A14		J5-3	Motor 5 -3
+		69	A15		J5-4	Motor 5 -4
  */
 
 // Serial debug output
-#define SERIAL_OUT
-#define SERIAL_OUT_VERBOSE
+//#define SER_OUT
+//#define SER_OUT_VERBOSE
 
 // *****************
 // HARDWARE enables
@@ -126,7 +130,7 @@ INT0	21	D21		SCL		I2C Clock
 // SOFTWARE enables
 // *****************
 #define _LOG
-//#define _MENU
+#define _MENU
 
 // I2C pin definitions
 #if defined(_DIS) || defined(_RTC) || defined(_BME) || defined(_KEY)
@@ -152,11 +156,11 @@ INT0	21	D21		SCL		I2C Clock
 // Sensor pins
 #ifdef _SEN
 
-#define COUNT_FLOOR 2
-const uint8_t FLOOR_SENSE[COUNT_FLOOR] = { A0, A1 };
-
 #define COUNT_HUMID 2
-const uint8_t HUMID_SENSE[COUNT_HUMID] = { A2, A3 };
+const uint8_t HUMID_SENSE[COUNT_HUMID] = { A0, A1 };
+
+#define COUNT_FLOOR 2
+const uint8_t FLOOR_SENSE[COUNT_FLOOR] = { A2, A3 };
 
 #define COUNT_PANS 4
 const uint8_t PANS_SENSE[COUNT_PANS] = { A4, A5, A6, A7 };
@@ -190,8 +194,8 @@ const uint8_t PWM[COUNT_PWM] = { 10 };
 #if defined(_NUT) || defined(_H2O)
 
  #ifdef _NUT
-#define PH_PUMP 0
-#define H2O_PUMP 1
+#define H2O_PUMP 0
+#define PH_PUMP 1
 #define NUT_START 1	// for screen display
 #define NUTRIENTS 5
  #endif
@@ -211,10 +215,10 @@ const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {{ 48, 49, 30, 31 },	// H2O
 // Note reversed order of two pins to reverse syringe pump direction
 const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {{ 48, 49, 30, 31 },	// H2O
                                                       { 45, 44, 46, 47 },	// PH UP	- PWM
-                                                      { 41, 40, 42, 43 },	// NUT 2
-                                                      { 37, 36, 38, 39 },	// NUT 1
-                                                      { 33, 32, 34, 35 },	// NUT 4
-                                                      { 67, 66, 68, 69 }};	// NUT 3
+                                                      { 41, 40, 42, 43 },	// NUT 1
+                                                      { 37, 36, 38, 39 },	// NUT 2
+                                                      { 33, 32, 34, 35 },	// NUT 3
+                                                      { 67, 66, 68, 69 }};	// NUT 4
 
 /* TODO: Change in 0.1e PCB version
 const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {
@@ -234,45 +238,31 @@ const uint8_t STEPPER_WIRES[COUNT_STEPPERS][WIRES] = {
 
  #if ( defined(_RAM) && !defined(_DIS) )
 #include "SRAM_23LC.h"
-SRAM_23LC Ram(&SPI, SS_RAM, SRAM_23LC512);
  #endif // _RAM
 
  #ifdef _MMC
 #include <SD.h>
-Sd2Card  card;
-SdVolume volume;
-SdFile   root;
-
  #endif // _MMC
-
+ 
 #endif // _SPI
 
 // I2C device headers
 #ifdef _I2C
 #include <Wire.h>
+
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
  #ifdef _DIS
-#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
   #ifdef _RAM
 #include <Adafruit_SSD1306_ram.h>
   #else
 #include <Adafruit_SSD1306.h>
   #endif // _RAM
-#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire,
-  #ifdef _RAM
-//&Ram, (uint32_t) 0,
-  #endif // _RAM
-OLED_RESET);
+  
  #endif // _DIS
  
  #ifdef _BME
 // Decalration for an BMP280 temperature, humidity, and pressure sensor
 #include <Adafruit_BME280.h>
-Adafruit_BME280 bme;
  #endif // _BME
  
  #ifdef _RTC
@@ -282,7 +272,6 @@ Adafruit_BME280 bme;
 
  #ifdef _KEY
 #include <PCF8574.h>
-PCF8574 keys((uint8_t) 0x20);
  #endif // _KEY
 
 #endif // _I2C
@@ -291,60 +280,7 @@ PCF8574 keys((uint8_t) 0x20);
 #include "PumpStepper.h"
 //#include <AccelStepper.h>
 #include <MultiStepper.h>
-#ifdef _NUT
-PumpStepper nut[NUTRIENTS] = {};
-MultiStepper nuts;
-#endif // _NUT
-PumpStepper stepper[COUNT_STEPPERS] = {};
-MultiStepper steppers;
 #endif // defined(_NUT) || defined(_H2O)
-
-#ifdef _DO_HW_CHECK
-// Hardware check status
-bool failed_spi = false;
-bool failed_ram = false;
-bool failed_mmc = false;
-bool failed_dis = false;
-bool failed_bme = false;
-bool failed_rtc = false;
-bool failed_key = false;
-#endif // DO_HW_CHECK
-
-#ifdef _FLO
-bool alarm_flow  = false;
-#endif // _FLO
-
-#ifdef _H2O
-bool alarm_h2o   = false;
-#endif // _H2O
-
-#ifdef _NUT
-bool alarm_nut   = false;
-#endif // _NUT
-
-#ifdef _SEN
-bool alarm_flood = false;
-int  alarm_soil  = 0;
-bool alarm_env   = false;
-volatile bool alarm_int = false;
-char alarm_state[20] = "FLOODFLOWNUTSOILENV";
-#endif // _SEN
-
-#ifdef _DIS
-unsigned long millis_display_loop;
-unsigned long interv_display_loop = 3000;
-#endif // _DIS
-
-#ifdef _BME
-char t_str[9];
-char p_str[9];
-char h_str[9];
-char tph_str[32];
-
-float t;
-float p;
-float h;
-#endif // _BME
 
 #define PULSE_PER_ML ((float) 925)
 
@@ -367,4 +303,4 @@ float h;
 
 #define ZONES (uint8_t) 1
 
-#define WEEKS ((uint8_t) 13)
+#endif // ARDUINO_NUTRIENT_CONTROL_C_H
