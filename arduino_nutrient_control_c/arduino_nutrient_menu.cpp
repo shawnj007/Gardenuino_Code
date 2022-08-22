@@ -89,19 +89,23 @@ float opt_nut_ratio_4=0;
 result updateValues() {
 	// TODO: Read or store to the opt_nut_ratio variable and MMC
 	if (week_n == week_disp) {
+#ifdef _NUT
 		// update stored from menu value, since week has changed
 		if (opt_nut_ratio[0][week_n] != opt_nut_ratio_0) opt_nut_ratio[0][week_n] = opt_nut_ratio_0;
 		if (opt_nut_ratio[1][week_n] != opt_nut_ratio_1) opt_nut_ratio[1][week_n] = opt_nut_ratio_1;
 		if (opt_nut_ratio[2][week_n] != opt_nut_ratio_2) opt_nut_ratio[2][week_n] = opt_nut_ratio_2;
 		if (opt_nut_ratio[3][week_n] != opt_nut_ratio_3) opt_nut_ratio[3][week_n] = opt_nut_ratio_3;
 		if (opt_nut_ratio[4][week_n] != opt_nut_ratio_4) opt_nut_ratio[4][week_n] = opt_nut_ratio_4;
+#endif
 	} else {
+#ifdef _NUT
 		// update menu from stored values, since week has changed
 		if (opt_nut_ratio[0][week_n] != opt_nut_ratio_0) opt_nut_ratio_0 = opt_nut_ratio[0][week_n];
 		if (opt_nut_ratio[1][week_n] != opt_nut_ratio_1) opt_nut_ratio_1 = opt_nut_ratio[1][week_n];
 		if (opt_nut_ratio[2][week_n] != opt_nut_ratio_2) opt_nut_ratio_2 = opt_nut_ratio[2][week_n];
 		if (opt_nut_ratio[3][week_n] != opt_nut_ratio_3) opt_nut_ratio_3 = opt_nut_ratio[3][week_n];
 		if (opt_nut_ratio[4][week_n] != opt_nut_ratio_4) opt_nut_ratio_4 = opt_nut_ratio[4][week_n];
+#endif
 		week_disp = week_n;
 	}
 	return proceed;
@@ -109,11 +113,13 @@ result updateValues() {
 
 MENU(h2o_nut_ratios, "Nutrient Ratios", updateValues, anyEvent, noStyle
      , FIELD(week_n, "Week", "w", 1, 13, 1, 1, updateValues, anyEvent, noStyle)
+#ifdef _NUT
      , FIELD(opt_nut_ratio_0, "Nut1", "mL/L", 0.0, 10.0, 1.0, 0.1, updateValues, anyEvent, noStyle)
      , FIELD(opt_nut_ratio_1, "Nut2", "mL/L", 0.0, 10.0, 1.0, 0.1, updateValues, anyEvent, noStyle)
      , FIELD(opt_nut_ratio_2, "Nut3", "mL/L", 0.0, 10.0, 1.0, 0.1, updateValues, anyEvent, noStyle)
      , FIELD(opt_nut_ratio_3, "Nut4", "mL/L", 0.0, 10.0, 1.0, 0.1, updateValues, anyEvent, noStyle)
      , FIELD(opt_nut_ratio_4, "Nut5", "mL/L", 0.0, 10.0, 1.0, 0.1, updateValues, anyEvent, noStyle)
+#endif     
      , EXIT("<Back")
     );
 

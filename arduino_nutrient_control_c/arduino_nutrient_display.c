@@ -1,14 +1,15 @@
 
  /* Idling Screen layout
+  *     012345678901234567890
   *    +---------------------+	
-  *	0  |YY/MM/DD W_day hh:mm |
-  *	1  |hh:mm:ss N_day hh:mm |
-  *	2  |  23.4oC Humi1 Flor1 |	
-  *	3  |  23.4%      2     2 |
-  *	4  | 123.4hP Soil1  Pan1 |
-  * 5  |  ALARM      2     2 |
-  * 6  |  ALARM      3     3 |
-  * 7  |  ALARM      4     4 |
+  *	0  |YY/MM/DD  W_day hh:mm|
+  *	1  |hh:mm:ss  N_day hh:mm|
+  *	2  |  23.4oC  Humi1 Flor1|	
+  *	3  |  23.4%       2     2|
+  *	4  | 123.4hP  Soil1  Pan1|
+  * 5  |FLOOD ENV     2     2|
+  * 6  |FLOW SOIL     3     3|
+  * 7  |NUT SUPPL     4     4|
   *    +---------------------+
   */
   
@@ -38,9 +39,9 @@
   * 2  |                     |
   * 3  |                     |
   * 4  |                     |
-  * 5  |                     |
-  * 6  |                     |
-  * 7  |                     |
+  * 5  |FLOOD ENV            |
+  * 6  |FLOW SOIL            |
+  * 7  |NUT SUPPL            |
   *    +---------------------+
   *
   */
@@ -117,17 +118,80 @@ void loop_display_idle() {
 	// 2  |  23.4oC             |
 	display.setCursor(0,16);
 	display.print(t_str);
-	// 4  |  23.4%              |
+	// 3  |  23.4%              |
 	display.setCursor(0,24);
 	display.print(h_str);
-	// 3  | 123.4hP             |
+	// 4  | 987.6hP             |
 	display.setCursor(0,32);
 	display.print(p_str);
   #endif
 
-  #ifdef _SEN	
+  #ifdef _SEN
+  	// display humidifier, soil, floor, and pan sensors
+  	
+  	//    +---------------------+
+	// 2  |         Humi1       |
+	display.setCursor(60,16);
+	//display.print();
+	
+	// 3  |         Humi2       |
+	display.setCursor(60,24);
+	//display.print();
+	
+	// 4  |         Soil1       |
+	display.setCursor(60,32);
+	//display.print();
+	
+	// 5  |         Soil2       |
+	display.setCursor(60,40);
+	//display.print();
+	
+	// 6  |         Soil3       |
+	display.setCursor(60,48);
+	//display.print();
+	
+	// 7  |         Soil4       |
+	display.setCursor(60,56);
+	//display.print();
+	
+	// 2  |               Flor1 |
+	display.setCursor(96,16);
+	//display.print();
+	
+	// 3  |               Flor1 |
+	display.setCursor(96,24);
+	//display.print();
+	
+	// 4  |                Pan1 |
+	display.setCursor(96,32);
+	//display.print();
+	
+	// 5  |                Pan2 |
+	display.setCursor(96,40);
+	//display.print();
+	
+	// 6  |                Pan3 |
+	display.setCursor(96,48);
+	//display.print();
+	
+	// 7  |                Pan4 |
+	display.setCursor(96,56);
+	//display.print();
+	
+	// 5  |FLOOD ENV            |
+	display.setCursor(0,40);
+	display.print(alarm_str[0]);
+	
+	// 6  |FLOW SOIL            |
+	display.setCursor(0,48);
+	display.print(alarm_str[1]);
+	
+	// 7  |NUT SUPPL            |
 	display.setCursor(0,56);
+	display.print(alarm_str[2]);
+	
 	//display.print(sys_status);
+	
   #endif
 
 	display.display();

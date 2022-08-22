@@ -97,7 +97,7 @@ unsigned long interv_h2o = 60; // in seconds
 unsigned long interv_nut = 60;
 
 unsigned long millis_rtc;
-unsigned long millis_interv_rtc = 200;
+unsigned long millis_interv_rtc = 125;
 
 unsigned long millis_interv_sch = 6000;
 unsigned long millis_sch;
@@ -131,12 +131,15 @@ bool alarm_flood = false;
 int  alarm_soil  = 0;
 bool alarm_env   = false;
 volatile bool alarm_int = false;
-char alarm_state[20] = "FLOODFLOWNUTSOILENV";
+char alarm_state[20]; // = "FLOODFLOWNUTSOILENV";
+char alarm_str[3][10]; // = {"FLOOD ENV",
+                       //    "FLOW SOIL",
+                       //    "NUT SUPPL"};
 #endif // _SEN
 
 #ifdef _DIS
 unsigned long millis_display_loop;
-unsigned long interv_display_loop = 3000;
+unsigned long interv_display_loop = 150;
 #endif // _DIS
 
 #ifdef _BME

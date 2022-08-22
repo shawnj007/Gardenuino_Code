@@ -45,23 +45,6 @@ void setup_steppers() {
 	Serial.println(F("Steppers done"));
  #endif // SER_OUT
 }
-
-bool check_alarm_nut() {
-	// TODO later design/build sensor
-	// Check pH value
-	// Check Electrical Conductivity
-	// Check Dissolved Oxygen
-	// Check Total Dissolved Solids
-	
-	// Check if enough nutrients remain
-	for (int s = 0; s < NUTRIENTS; ++s) {
-		if (opt_nut_rem[s] <= 0) alarm_nut = true;
-	}
- #ifdef SER_OUT
-	if (alarm_nut) Serial.println(F("ALARM\nALARM: nutrient\nALARM"));
- #endif // SER_OUT
-	return alarm_nut;
-}
 #endif // _NUT
 
 #ifdef _VAL
@@ -149,11 +132,11 @@ void setup_flow_rate() {
 void h2o_tick_in() {
 	++h2o_ticks[0];
 }
-
+/*
 void h2o_tick_out() {
 	++h2o_ticks[1];
 }
-
+*/
 void enable_flow_rate(bool enable) {
  #ifdef SER_OUT
 	Serial.println(F("Configuring flow rate sensor"));

@@ -18,7 +18,7 @@ void setup_sensors() {
  #endif // SER_OUT
 }
 
-bool check_alarm_flood() {
+bool check_alarm_flood(int zone) {
 	// TODO later design/build sensor
  #ifdef SER_OUT
 	if (alarm_flood) Serial.println(F("ALARM\nALARM: flood\nALARM"));
@@ -26,12 +26,39 @@ bool check_alarm_flood() {
 	return alarm_flood;
 }
 
+bool check_alarm_nut() {
+	// TODO later design/build sensor
+	// Check pH value
+	// Check Electrical Conductivity
+	// Check Dissolved Oxygen
+	// Check Total Dissolved Solids
+	
+	// Check if enough nutrients remain
+	for (int s = 0; s < NUTRIENTS; ++s) {
+		if (opt_nut_rem[s] <= 0) alarm_nut = true;
+	}
+ #ifdef SER_OUT
+	if (alarm_nut) Serial.println(F("ALARM\nALARM: nutrient\nALARM"));
+ #endif // SER_OUT
+	return alarm_nut;
+}
+
+bool check_alarm_humid(int zone) {
+	// TODO
+	return false;
+}
+
 bool check_alarm_soil(int zone) {
-	int value = PLANTS_SENSE[zone];
+	int value = analogRead(PLANTS_SENSE[zone]);
 	if (value < SOIL_MOIST_MIN) alarm_soil = -1;
 	if (value > SOIL_MOIST_MAX) alarm_soil =  1;
 	if (alarm_soil) Serial.println(F("ALARM\nALARM: soil\nALARM"));
 	return (alarm_soil != 0);
+}
+
+bool check_alarm_pan(int zone) {
+	// TODO
+	return false;
 }
 
 bool check_alarm_env() {
@@ -62,33 +89,53 @@ bool check_sensor(int pin, int threshold) {
 	}	
 }
 */
+
+bool check_alarms() {
+	return false
+#ifdef _SEN
+		|| check_alarm_flood(0)
+		|| check_alarm_flood(1)
+
+		|| check_alarm_humid(0)
+		|| check_alarm_humid(1)
+		
+		|| check_alarm_soil(0)
+		|| check_alarm_soil(1)
+		|| check_alarm_soil(2)
+		|| check_alarm_soil(3)
+		
+		|| check_alarm_pan(0)
+		|| check_alarm_pan(1)
+		|| check_alarm_pan(2)
+		|| check_alarm_pan(3)
+		
+		|| check_alarm_env()
+		|| check_alarm_int()
+
+ #ifdef _NUT
+		|| check_alarm_nut()
+ #endif // _NUT
+
+#endif // _SEN
+#ifdef _FLO
+		//|| check_alarm_flow() 			// FIXME
+#endif // _FLO
+		;
+}
+
 bool check_inputs() {
 	// TODO later
 	// Check soil moisture sensors
 	// Check humidifier tank sensors
-	return false;
-}
-
-bool check_alarms() {
+	
+	
+	
 	return false;
 }
 
 #endif // _SEN
 
 /*
-#ifdef _SEN
-		|| check_alarm_flood()
- #ifdef _NUT
-		//|| check_alarm_nut() 				// FIXME
- #endif // _NUT
-		//|| check_alarm_soil(0) 			// FIXME
-		|| check_alarm_env()
-		|| check_alarm_int()
-#endif // _SEN
-#ifdef _FLO
-		//|| check_alarm_flow() 			// FIXME
-#endif // _FLO
-		;
 */
 
 #ifdef _FLO
