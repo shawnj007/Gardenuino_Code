@@ -5,10 +5,10 @@
 int ROW[4] = {P0, P1, P2, P3};
 int COL[4] = {P4, P5, P6, P7};
 
-uint8_t key_[4][4] = {{ 1, 2,  3, 11}, 
-                      { 4, 5,  6, 12},
-                      { 7, 8,  9, 13},
-                      {15, 0, 10, 14}};
+uint8_t key_[4][4] = { { KEY_UL, KEY_UP, KEY_UR, KEY_F1 }, 
+                       { KEY_LT, KEY_CE, KEY_RT, KEY_F2 },
+                       { KEY_DL, KEY_DN, KEY_DR, KEY_F3 },
+                       { KEY_SR, KEY_ZE, KEY_SP, KEY_F4 } };
 
 float last_key = KEY_NO_PRESS;
 float menu_pos = 0; // fmt: XX.YY
@@ -38,7 +38,7 @@ uint8_t check_key() {
 	// get key from I2C key library
 	// check for key change
 	// return key value (if changed)
-	// else return 0 = no change, -1 = no key pressed
+	// else return KEY_NO_CHANGE = no change, KEY_NO_PRESS = no key pressed
  #ifdef SER_OUT_VERBOSE
 	Serial.println(F("checking key"));
  #endif // SER_OUT_VERBOSE
@@ -71,11 +71,15 @@ uint8_t check_key() {
 int select_menu(int menu, int menu_pos) {
 	// Select the right menu...
 
+	// ... and change options that don't\
+	// result in memory change
+	
 	switch (menu) {
 		case MENU_MAIN:
 			switch (menu_pos) {
 				case 0:
 					return MENU_MANUAL;
+					
 			}
 	}
 	
@@ -89,7 +93,6 @@ int display_menu(int menu, float menu_pos) {
 	switch (menu) {
 		case MENU_MAIN:
 			
-		
 			break;
 	}
 	
@@ -105,12 +108,12 @@ bool menu_loop(int menu) {
 	
 	switch (key) {
 		// Enter menu
-		case KEY_START:
+		case KEY_SR:
 			// Change to appropriate child-menu
 			menu = select_menu(menu, menu_pos);
 			while (menu_loop(menu));
 			break;
-		case KEY_STOP:
+		case KEY_SP:
 			// Change to appropriate parent-menu
 			return false;
 			break;
@@ -175,10 +178,10 @@ void loop_key() {
 		//case KEY_NO_PRESS:
 		case KEY_NO_CHANGE:
 		  break;
-		case KEY_START:
+		case KEY_SR:
 		  while (start_loop());
 		  break;
-		case KEY_STOP:
+		case KEY_SP:
 		  while (stop_loop());
 		  break;
 		case KEY_F1:

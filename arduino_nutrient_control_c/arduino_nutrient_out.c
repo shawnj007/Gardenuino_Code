@@ -4,10 +4,17 @@ void setup_steppers() {
  #ifdef SER_OUT_VERBOSE
 		Serial.println(F("Setting up steppers"));
  #endif // SER_OUT_VERBOSE
+ 
 	// 6 steppers, 4 wires each
 	uint8_t s;
-	for (s = 0; s < COUNT_STEPPERS - NUTRIENTS; ++s) {
-		stepper[s] = PumpStepper(PumpStepper::HALF4WIRE, STEPPER_WIRES[s][0], STEPPER_WIRES[s][1], STEPPER_WIRES[s][2], STEPPER_WIRES[s][3]);
+	for (s = 0; s < COUNT_STEPPERS - NUTRIENTS; ++s) {	// 6 - 5 = 1
+		stepper[s] = PumpStepper(
+					 PumpStepper::HALF4WIRE,
+					 STEPPER_WIRES[s][0],
+					 STEPPER_WIRES[s][1],
+					 STEPPER_WIRES[s][2],
+					 STEPPER_WIRES[s][3]);
+					 
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
  #ifdef SER_OUT
@@ -16,8 +23,21 @@ void setup_steppers() {
  #endif // SER_OUT_VERBOSE
 	}
 	
-	for ( ; s < COUNT_STEPPERS - (NUTRIENTS - 3); ++s) {
-		stepper[s] = PumpStepper(PumpStepper::SYRINGE, 69.0, 20.0, PumpStepper::HALF4WIRE, STEPPER_WIRES[s][0], STEPPER_WIRES[s][1], STEPPER_WIRES[s][2], STEPPER_WIRES[s][3], 0, 0, true);
+	for ( ; s < COUNT_STEPPERS - (NUTRIENTS - LARGE_SYRINGES); ++s) { // 6 - ( 5 - 4 ) = 6 - 1 = 5
+	
+		stepper[s] = PumpStepper(
+					 PumpStepper::SYRINGE,
+					 69.0,
+					 20.0,
+					 PumpStepper::HALF4WIRE,
+					 STEPPER_WIRES[s][0],
+					 STEPPER_WIRES[s][1],
+					 STEPPER_WIRES[s][2],
+					 STEPPER_WIRES[s][3],
+					 0,
+					 0,
+					 true);
+					 
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
  #ifdef SER_OUT
@@ -27,7 +47,20 @@ void setup_steppers() {
 	}
 	
 	for ( ; s < COUNT_STEPPERS; ++s) {
-		stepper[s] = PumpStepper(PumpStepper::SYRINGE, 47.75, 3.0, PumpStepper::HALF4WIRE, STEPPER_WIRES[s][0], STEPPER_WIRES[s][1], STEPPER_WIRES[s][2], STEPPER_WIRES[s][3], 0, 0, true);
+	
+		stepper[s] = PumpStepper(
+					 PumpStepper::SYRINGE,
+					 47.75,
+					 3.0,
+					 PumpStepper::HALF4WIRE,
+					 STEPPER_WIRES[s][0],
+					 STEPPER_WIRES[s][1],
+					 STEPPER_WIRES[s][2],
+					 STEPPER_WIRES[s][3],
+					 0,
+					 0,
+					 true);
+					 
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
  #ifdef SER_OUT

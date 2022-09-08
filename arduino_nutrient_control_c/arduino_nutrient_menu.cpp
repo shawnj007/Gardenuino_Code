@@ -43,6 +43,7 @@ MENU(system_status, "System Status", doNothing, noEvent, noStyle
 bool run_h2o  = false;
 bool run_nut  = false;
 bool run_auto = false;
+
 /*
 result setRunning() {
 	running_h2o = run_h2o;
@@ -166,6 +167,7 @@ MENU(mainMenu, "Main menu", doNothing, noEvent, wrapStyle
 
 /*
 */
+
 #define MAX_DEPTH 3
 idx_t tops[MAX_DEPTH] = {0, 0, 0}; //store cursor positions for each level
 

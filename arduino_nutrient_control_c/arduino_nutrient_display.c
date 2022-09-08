@@ -7,9 +7,9 @@
   *	2  |  23.4oC  Humi1 Flor1|	
   *	3  |  23.4%       2     2|
   *	4  | 123.4hP  Soil1  Pan1|
-  * 5  |FLOOD ENV     2     2|
+  * 5  |H2O SUPPL     2     2|
   * 6  |FLOW SOIL     3     3|
-  * 7  |NUT SUPPL     4     4|
+  * 7  |FLOOD ENV     4     4|
   *    +---------------------+
   */
   
@@ -39,9 +39,9 @@
   * 2  |                     |
   * 3  |                     |
   * 4  |                     |
-  * 5  |FLOOD ENV            |
+  * 5  |H2O SUPPL            |
   * 6  |FLOW SOIL            |
-  * 7  |NUT SUPPL            |
+  * 7  |FLOOD ENV            |
   *    +---------------------+
   *
   */
@@ -115,10 +115,10 @@ void loop_display_idle() {
   #ifdef _BME
   	// display environmental sensors
   	
-	// 2  |  23.4oC             |
+	// 2  |  21.0oC             |
 	display.setCursor(0,16);
 	display.print(t_str);
-	// 3  |  23.4%              |
+	// 3  |  54.3%              |
 	display.setCursor(0,24);
 	display.print(h_str);
 	// 4  | 987.6hP             |
