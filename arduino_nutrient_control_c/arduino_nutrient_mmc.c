@@ -1,4 +1,3 @@
-
 #ifdef _MMC
 void setup_mmc() {
  #ifdef SER_OUT
@@ -12,13 +11,13 @@ void setup_mmc() {
 		switch (card.type()) {
 			case SD_CARD_TYPE_SD1:
 				Serial.println(F("SD1"));
-			break;
+				break;
 			case SD_CARD_TYPE_SD2:
 				Serial.println(F("SD2"));
-			break;
+				break;
 			case SD_CARD_TYPE_SDHC:
 				Serial.println(F("SDHC"));
-			break;
+				break;
 			default:
 				Serial.println(F("Unknown"));
 		}
@@ -39,86 +38,86 @@ void setup_mmc() {
 	}
  #ifdef _DO_HW_CHECK
 	if (!failed_mmc && volume.init(card)) {
- #ifdef SER_OUT_VERBOSE
+  #ifdef SER_OUT_VERBOSE
 		Serial.print(F("Clusters:          "));
 		Serial.println(volume.clusterCount());
 		Serial.print(F("Blocks x Cluster:  "));
 		Serial.println(volume.blocksPerCluster());
-		
+
 		Serial.print(F("Total Blocks:      "));
 		Serial.println(volume.blocksPerCluster() * volume.clusterCount());
 		Serial.println();
- #endif
+  #endif
 		// print the type and size of the first FAT-type volume
 		uint32_t volumesize;
- #ifdef SER_OUT_VERBOSE
+  #ifdef SER_OUT_VERBOSE
 		Serial.print(F("Volume type is:    FAT"));
 		Serial.println(volume.fatType(), DEC);
- #endif
-		volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
-		volumesize *= volume.clusterCount();       // we"ll have a lot of clusters
-		volumesize /= 2;                           // SD card blocks are always 512 bytes (2 blocks are 1KB)
- #ifdef SER_OUT_VERBOSE
+  #endif
+		volumesize = volume.blocksPerCluster();	 // clusters are collections of blocks
+		volumesize *= volume.clusterCount();	 // we"ll have a lot of clusters
+		volumesize /= 2;						 // SD card blocks are always 512 bytes (2 blocks are 1KB)
+  #ifdef SER_OUT_VERBOSE
 		Serial.print(F("Volume size (Kb):  "));
 		Serial.println(volumesize);
 		Serial.print(F("Volume size (Mb):  "));
- #endif
+  #endif
 		volumesize /= 1024;
- #ifdef SER_OUT_VERBOSE
+  #ifdef SER_OUT_VERBOSE
 		Serial.println(volumesize);
 		Serial.print(F("Volume size (Gb):  "));
 		Serial.println((float)volumesize / 1024.0);
 		Serial.println(F("\nFiles found on the card (name, date and size in bytes): "));
- #endif
+  #endif
 		root.openRoot(volume);
-		
+
 		// list all files in the card with date and size
 		root.ls(LS_R | LS_DATE | LS_SIZE);
 		if (!SD.begin(SS_MMC)) {
- #ifdef SER_OUT
+  #ifdef SER_OUT
 			Serial.println(F("FAILED: MMC initialization failed!"));
- #endif
- #ifdef _DO_HW_CHECK
+  #endif
+  #ifdef _DO_HW_CHECK
 			failed_mmc = true;
- #endif // _DO_HW_CHECK
+  #endif  // _DO_HW_CHECK
 		}
-	} else 
- #endif // _DO_HW_CHECK
+	} else
+ #endif	 // _DO_HW_CHECK
 	{
  #ifdef SER_OUT_VERBOSE
 		Serial.println(F("FAILED: Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
  #ifdef _DO_HW_CHECK
 		failed_mmc = true;
- #endif // _DO_HW_CHECK
+ #endif	 // _DO_HW_CHECK
 	}
  #ifdef _RTC
 	SdFile::dateTimeCallback(dateTime);
  #endif
  #ifdef SER_OUT
 	Serial.println(F("MMC done"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 }
 
-void backup_file(char* filename) {
+void backup_file(char *filename) {
 	if (SD.exists(filename)) {
  #ifdef SER_OUT
 		Serial.print(F("Backing up "));
 		Serial.println(filename);
- #endif // SER_OUT
+ #endif	 // SER_OUT
 		File file_old = SD.open(filename, FILE_READ);
-		char file_new_name[13] = { };
+		char file_new_name[13] = {};
 		sprintf(file_new_name, "old_%s", filename);
  #ifdef _RTC
-		char data_header[20] = { };
+		char data_header[20] = {};
 		sprintf(data_header, "\nd%04d%02d%02dt%02d%02d%02d\n", tmYearToCalendar(tm.Year), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
- #endif // _RTC
+ #endif	 // _RTC
 		File file_new = SD.open(file_new_name, FILE_WRITE);
 		size_t n;
 		uint8_t buf[64];
  #ifdef _RTC
 		file_new.write(data_header);
- #endif // _RTC
+ #endif	 // _RTC
 		while ((n = file_old.read(buf, sizeof(buf))) > 0) file_new.write(buf, n);
 		file_old.flush();
 		file_old.close();
@@ -126,7 +125,7 @@ void backup_file(char* filename) {
 		file_new.close();
  #ifdef SER_OUT
 		Serial.println(F("Backup done"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 	}
 }
 
@@ -134,29 +133,29 @@ void backup_file(char* filename) {
 bool write_nut_file() {
   #ifdef SER_OUT
 	Serial.println(F("Writing nutrient file."));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 	char filename[] = "nut.cfg";
 	//backup_file(filename);
 	File file;
-	
+
 	if (SD.exists(filename)) {
 		file = SD.open(filename, O_WRITE);
 		file.seek(0);
 	} else {
 		file = SD.open(filename, FILE_WRITE);
 	}
-	
+
 	if (!file) {
   #ifdef SER_OUT
 		Serial.println(F("FAILED to open nut.cfg"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 		return false;
 	}
 
 	// write rows (nutrient count)
 	sprintf(fil_output, "%2d\n", NUTRIENTS);
 	file.write(fil_output);
-	
+
 	// write cols (weeks count)
 	sprintf(fil_output, "%2d\n", WEEKS);
 	file.write(fil_output);
@@ -167,11 +166,11 @@ bool write_nut_file() {
 		file.write(fil_output);
 	}
 	file.write("\n");
-  #endif // defined(_FLO) || defined(_H2O)
+  #endif  // defined(_FLO) || defined(_H2O)
 	// write array[rows,cols] into nut amounts
 	for (int i = 0; i < NUTRIENTS; ++i) {
 		for (int j = 0; j < WEEKS; ++j) {
-			sprintf(fil_output, "%4d.%01d", (int) opt_nut_ratio[i][j], (int) (opt_nut_ratio[i][j] * 10.0) % 10);
+			sprintf(fil_output, "%4d.%01d", (int)opt_nut_ratio[i][j], (int)(opt_nut_ratio[i][j] * 10.0) % 10);
 			file.write(fil_output);
 		}
 		file.write("\n");
@@ -180,7 +179,7 @@ bool write_nut_file() {
 	file.close();
   #ifdef SER_OUT
 	Serial.println(F("Done"));
-  #endif //SER_OUT
+  #endif  //SER_OUT
 	return true;
 }
 
@@ -193,13 +192,13 @@ bool read_nut_file() {
 
 	File file = SD.open(filename, FILE_READ);
 	if (!file) return false;
-	
-	char val[7] = { };
-	
+
+	char val[7] = {};
+
 	// read rows (nutrient count)
 	file.read(val, 3);
 	int nutrients = atoi(val);
-	
+
 	// read cols (weeks count)
 	file.read(val, 3);
 	int weeks = atoi(val);
@@ -209,13 +208,15 @@ bool read_nut_file() {
   #ifdef SER_OUT
 		Serial.println(F("Week count does not match."));
   #endif
-		while (true);
+		while (true)
+			;
 	}
 	if (nutrients != NUTRIENTS) {
   #ifdef SER_OUT
 		Serial.println(F("Nutrient count does not match."));
   #endif
-		while (true);
+		while (true)
+			;
 	}
 
 
@@ -226,7 +227,7 @@ bool read_nut_file() {
 		opt_h2o_amt[j] = atoi(val);
 	}
 	file.read(val, 1);
-  #endif // defined(_FLO) || defined(_H2O)
+  #endif  // defined(_FLO) || defined(_H2O)
 	// read array[rows,cols] into nut amounts
 	for (int i = 0; i < NUTRIENTS; ++i) {
 		for (int j = 0; j < WEEKS; ++j) {
@@ -239,7 +240,7 @@ bool read_nut_file() {
 	file.close();
   #ifdef SER_OUT
 	Serial.println(F("Done with nutrient files"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 	return true;
 }
 
@@ -260,7 +261,7 @@ void write_nut_rem_file(int s) {
 	Serial.print(s);
 	Serial.print(F(" remaining"));
 	Serial.println(fil_output);
-  #endif // SER_OUT_VERBOSE
+  #endif  // SER_OUT_VERBOSE
 	file.write(fil_output);
 	file.flush();
 	file.close();
@@ -273,18 +274,18 @@ float read_nut_rem_file(int s) {
 	sprintf(filename, "%s_%01d.rem", type, s);
 	if (!SD.exists(filename)) write_nut_rem_file(s);
 	File file = SD.open(filename, FILE_READ);
-	char val[11] = { };
+	char val[11] = {};
 	file.read(val, 10);
   #ifdef SER_OUT_VERBOSE
 	Serial.print(F("Reading nutrient "));
 	Serial.print(s);
 	Serial.print(F(" remaining"));
 	Serial.println(val);
-  #endif // SER_OUT_VERBOSE
+  #endif  // SER_OUT_VERBOSE
 	file.close();
 	return atof(val);
 }
- #endif // _NUT
+ #endif	 // _NUT
 
  #ifdef _RTC
 bool write_zone_file(const char *type, int zone, char times[3][20]) {
@@ -307,14 +308,14 @@ bool write_zone_file(const char *type, int zone, char times[3][20]) {
 		sprintf(ser_output, "%d", zone);
 		Serial.print(ser_output);
 		Serial.println(F(" failed"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 		return false;
 	}
   #ifdef SER_OUT
 	Serial.println();
-  #endif // SER_OUT
+  #endif  // SER_OUT
 	// Write zone start date		YYYY/MM/DD HH:MM:SS AP
-	if (times[0][0] == (char) 0) {
+	if (times[0][0] == (char)0) {
 		// Write zone start date
 		file.write(dttm_str);
 		file.write("\n");
@@ -330,14 +331,14 @@ bool write_zone_file(const char *type, int zone, char times[3][20]) {
 			Serial.print(F("Wrote "));
 			Serial.print(times[i]);
 			Serial.print(F(" to file.\n"));
-  #endif // SER_OUT_VERBOSE
+  #endif  // SER_OUT_VERBOSE
 		}
 	}
 	file.flush();
 	file.close();
   #ifdef SER_OUT
 	Serial.println(F("Done"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 	return true;
 }
 
@@ -347,26 +348,26 @@ bool read_zone_file(const char *type, int zone, char times[3][20]) {
 	Serial.print(type);
 	Serial.print(F(" "));
 	Serial.println(zone);
-  #endif // SER_OUT
-	
+  #endif  // SER_OUT
+
 	char filename[13];
 	sprintf(filename, "%s_%01d.cfg", type, zone);
-	
+
 	if (!SD.exists(filename)) {
 		for (int i = 0; i < 3; ++i)
 			for (int j = 0; j < 20; ++j)
-				times[i][j] = (char) 0;
+				times[i][j] = (char)0;
 		write_zone_file(type, zone, times);
 	}
-	
+
 	File file = SD.open(filename, FILE_READ);
 	if (!file) {
   #ifdef SER_OUT
 		Serial.println(F(" failed"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 		return false;
 	}
-	
+
 	// Read zone dates
 	for (int i = 0; i < 3; ++i) {
 		file.read(times[i], 20);
@@ -374,19 +375,19 @@ bool read_zone_file(const char *type, int zone, char times[3][20]) {
 	}
 
 	// TODO verify that file matches compiled code parameters (counts)
-	
+
 	file.close();
   #ifdef SER_OUT
 	Serial.println(F("Done"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 	return true;
 }
- #endif // _RTC
+ #endif	 // _RTC
 
-bool write_zone_log_file(const char *type, int zone, char* log_entry) {
+bool write_zone_log_file(const char *type, int zone, char *log_entry) {
  #ifdef SER_OUT_VERBOSE
 	Serial.println(F("Writing zone log file."));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	char filename[13];
 	sprintf(filename, "%s_%01d.log", type, zone);
 	File file = SD.open(filename, FILE_WRITE);
@@ -426,7 +427,7 @@ bool write_limits_file() {
 	} else {
 		file = SD.open(filename, FILE_WRITE);
 	}
-	
+
 	// TODO ?
 	return false;
 }
@@ -462,43 +463,43 @@ void write_config_files() {
 void read_config_files() {
  #ifdef SER_OUT
 	Serial.println(F("Reading config files."));
- #endif // SER_OUT
+ #endif	 // SER_OUT
  #ifdef _NUT
 	read_nut_file();
- #endif // _NUT
+ #endif	 // _NUT
 	// TODO
  #ifdef _SEN
 	for (int i = 0; i < COUNT_HUMID; ++i) {
-//		read_zone_file("humid", i);
+		//		read_zone_file("humid", i);
 	}
-	
+
 	for (int i = 0; i < COUNT_PLANTS; ++i) {
-//		read_zone_file("zone", i);
+		//		read_zone_file("zone", i);
 	}
- #endif // _SEN
+ #endif	 // _SEN
 }
 
 void load_options() {
 	// check if SD card is valid and working
-		// check if options already exist on SD card
-			// check if options are valid
-				// load options
+	// check if options already exist on SD card
+	// check if options are valid
+	// load options
 	// .. any fails, load fallback options
 }
 
 void save_options() {
 	// check if SD card is valid and working
-		// check if options already exist on SD card
-			// check if options are valid
-				// save options
+	// check if options already exist on SD card
+	// check if options are valid
+	// save options
 }
 
  #if defined(_MMC) && defined(_LOG)
 bool write_log_file() {
 	bool ret = false;
-	
+
 	File log_file = SD.open("system.log", FILE_WRITE);
-	
+
 	// if the file is available, write to it:
 	if (log_file) {
 		for (int i = 0; i < LOG_CACHE_SIZE; i++) {
@@ -507,7 +508,7 @@ bool write_log_file() {
 			log_file.println(log_string[n]);
   #ifdef SER_OUT
 			Serial.println(log_string[n]);
-  #endif // SER_OUT
+  #endif  // SER_OUT
 		}
 		log_file.close();
 		// print to the serial port too:
@@ -528,15 +529,15 @@ void cache_log() {
 	// prepare the log statment
 	sprintf(log_string[s++], "%s %s",
   #ifdef _RTC
-	dttm_str,
-  #else 
-	"",
-  #endif // _RTC
-  #ifdef _BME
-	tph_str
+			dttm_str,
   #else
-	""
-  #endif // _BME
+			"",
+  #endif  // _RTC
+  #ifdef _BME
+			tph_str
+  #else
+			""
+  #endif  // _BME
 	);
 	if (s == LOG_CACHE_SIZE) s = 0;
 }
@@ -548,30 +549,30 @@ void loop_log() {
 	}
 	if (millis_log + millis_interv_log >= millis()) return;
 	millis_log = millis();
-	
+
   #ifdef _DO_HW_CHECK
 	// check if MMC is valid
 	if (failed_mmc) return;
-  #endif // _DO_HW_CHECK
+  #endif  // _DO_HW_CHECK
 
   #ifdef _DIS
-	display.setCursor(0,56);             // Start at top-left corner
+	display.setCursor(0, 56);  // Start at top-left corner
 	display.print("WRITING");
 	display.display();
-  #endif // _DIS
-	
+  #endif  // _DIS
+
 	// check if log file exists
 	// open/write/close file
-	if (!write_log_file()) {	// if the file isn"t open, pop up an error:
+	if (!write_log_file()) {  // if the file isn"t open, pop up an error:
   #ifdef SER_OUT
 		Serial.println(F("error writing to system.log"));
-  #endif // SER_OUT
+  #endif  // SER_OUT
 	}
   #ifdef _DIS
-	display.setCursor(40,56);             // Start at top-left corner
+	display.setCursor(40, 56);	// Start at top-left corner
 	display.print("..DONE.");
 	display.display();
-  #endif // _DIS
+  #endif  // _DIS
 }
- #endif // defined(_MMC) && defined(_LOG)
-#endif // _MMC
+ #endif	 // defined(_MMC) && defined(_LOG)
+#endif	 // _MMC

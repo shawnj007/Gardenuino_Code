@@ -1,4 +1,3 @@
-
 #ifdef _RTC
 time_t getDateTime(const char *str) {
 	int Year, Month, Day, Hour, Min, Sec;
@@ -18,13 +17,13 @@ time_t getDateTime(const char *str) {
 	dttm.Second = Sec;
 	time_t time = makeTime(dttm);
  #ifdef SER_OUT
-	sprintf(ser_output, "%s = %ld\n", str, (unsigned long) time);
+	sprintf(ser_output, "%s = %ld\n", str, (unsigned long)time);
 	Serial.print(ser_output);
  #endif
 	return time;
 }
 
- #if defined(SER_OUT) || defined (SER_OUT_VERBOSE)
+ #if defined(SER_OUT) || defined(SER_OUT_VERBOSE)
 void print2digits(int number) {
 	if (number >= 0 && number < 10) {
 		Serial.write("0");
@@ -51,18 +50,18 @@ void read_rtc() {
 	Serial.println();
  #endif
 }
- 
+
 void print_rtc() {
-	sprintf(dt_str, "%02d/%02d/%02d", tmYearToCalendar(tm.Year)%100, tm.Month, tm.Day);
+	sprintf(dt_str, "%02d/%02d/%02d", tmYearToCalendar(tm.Year) % 100, tm.Month, tm.Day);
 	sprintf(tm_str, "%2d:%02d:%02d", tm.Hour, tm.Minute, tm.Second);
 	sprintf(dttm_str, "%04d/%02d/%02d %2d:%02d:%02d", tmYearToCalendar(tm.Year), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
 }
 
 // call back for file timestamps
  #ifdef _MMC
-void dateTime(uint16_t* date, uint16_t* time) {
+void dateTime(uint16_t *date, uint16_t *time) {
 	read_rtc();
-	
+
 	// return date using FAT_DATE macro to format fields
 	*date = FAT_DATE(tm.Year - 78, tm.Month, tm.Day);
 
@@ -131,7 +130,7 @@ void setup_rtc() {
 			if ((tm_rtc.Year >= tm.Year) && (tm_rtc.Month >= tm.Month) && (tm_rtc.Day >= tm.Day) && (tm_rtc.Hour >= tm.Hour) && (tm_rtc.Minute >= tm.Minute)) {
 				char rtc_time_out[128];
 				RTC.read(tm);
-				sprintf(rtc_time_out, "%02d/%02d/%02d %2d:%02d:%02d", tmYearToCalendar(tm.Year)%100, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
+				sprintf(rtc_time_out, "%02d/%02d/%02d %2d:%02d:%02d", tmYearToCalendar(tm.Year) % 100, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
  #ifdef SER_OUT
 				Serial.print(F("RTC time is: "));
 				Serial.println(rtc_time_out);
@@ -147,4 +146,4 @@ void setup_rtc() {
 	}
 }
 
-#endif // _RTC
+#endif	// _RTC

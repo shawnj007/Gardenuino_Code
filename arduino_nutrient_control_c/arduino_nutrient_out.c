@@ -1,90 +1,89 @@
-
 #ifdef _NUT
 void setup_steppers() {
  #ifdef SER_OUT_VERBOSE
-		Serial.println(F("Setting up steppers"));
- #endif // SER_OUT_VERBOSE
- 
+	Serial.println(F("Setting up steppers"));
+ #endif	 // SER_OUT_VERBOSE
+
 	// 6 steppers, 4 wires each
 	uint8_t s;
 	for (s = 0; s < COUNT_STEPPERS - NUTRIENTS; ++s) {	// 6 - 5 = 1
 		stepper[s] = PumpStepper(
-					 PumpStepper::HALF4WIRE,
-					 STEPPER_WIRES[s][0],
-					 STEPPER_WIRES[s][1],
-					 STEPPER_WIRES[s][2],
-					 STEPPER_WIRES[s][3]);
-					 
+			PumpStepper::HALF4WIRE,
+			STEPPER_WIRES[s][0],
+			STEPPER_WIRES[s][1],
+			STEPPER_WIRES[s][2],
+			STEPPER_WIRES[s][3]);
+
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
  #ifdef SER_OUT
 		Serial.print(s);
 		Serial.println(F(" Stepper CONTINUOUS"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	}
-	
-	for ( ; s < COUNT_STEPPERS - (NUTRIENTS - LARGE_SYRINGES); ++s) { // 6 - ( 5 - 4 ) = 6 - 1 = 5
-	
+
+	for (; s < COUNT_STEPPERS - (NUTRIENTS - LARGE_SYRINGES); ++s) {  // 6 - ( 5 - 4 ) = 6 - 1 = 5
+
 		stepper[s] = PumpStepper(
-					 PumpStepper::SYRINGE,
-					 69.0,
-					 20.0,
-					 PumpStepper::HALF4WIRE,
-					 STEPPER_WIRES[s][0],
-					 STEPPER_WIRES[s][1],
-					 STEPPER_WIRES[s][2],
-					 STEPPER_WIRES[s][3],
-					 0,
-					 0,
-					 true);
-					 
+			PumpStepper::SYRINGE,
+			69.0,
+			20.0,
+			PumpStepper::HALF4WIRE,
+			STEPPER_WIRES[s][0],
+			STEPPER_WIRES[s][1],
+			STEPPER_WIRES[s][2],
+			STEPPER_WIRES[s][3],
+			0,
+			0,
+			true);
+
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
  #ifdef SER_OUT
 		Serial.print(s);
 		Serial.println(F(" Stepper SYRINGE H = 69.00 V = 20.0"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	}
-	
-	for ( ; s < COUNT_STEPPERS; ++s) {
-	
+
+	for (; s < COUNT_STEPPERS; ++s) {
+
 		stepper[s] = PumpStepper(
-					 PumpStepper::SYRINGE,
-					 47.75,
-					 3.0,
-					 PumpStepper::HALF4WIRE,
-					 STEPPER_WIRES[s][0],
-					 STEPPER_WIRES[s][1],
-					 STEPPER_WIRES[s][2],
-					 STEPPER_WIRES[s][3],
-					 0,
-					 0,
-					 true);
-					 
+			PumpStepper::SYRINGE,
+			47.75,
+			3.0,
+			PumpStepper::HALF4WIRE,
+			STEPPER_WIRES[s][0],
+			STEPPER_WIRES[s][1],
+			STEPPER_WIRES[s][2],
+			STEPPER_WIRES[s][3],
+			0,
+			0,
+			true);
+
 		stepper[s].setMaxSpeed(MAXSPEED);
 		steppers.addStepper(stepper[s]);
  #ifdef SER_OUT
 		Serial.print(s);
 		Serial.println(F(" Stepper SYRINGE H = 47.75 V =  3.0"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	}
-	
+
 	for (uint8_t n = 0; n < NUTRIENTS; ++n) {
 		nut[n] = stepper[COUNT_STEPPERS - NUTRIENTS + n];
 		nuts.addStepper(nut[n]);
 	}
-	
+
  #ifdef SER_OUT
 	Serial.println(F("Steppers done"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 }
-#endif // _NUT
+#endif	// _NUT
 
 #ifdef _VAL
 void setup_valves() {
  #ifdef SER_OUT_VERBOSE
 	Serial.println(F("Setting up valves"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	// 7 outputs
 	for (uint8_t s = 0; s < COUNT_VALVES; ++s) {
 		pinMode(VALVES[s], OUTPUT);
@@ -92,11 +91,11 @@ void setup_valves() {
  #ifdef SER_OUT_VERBOSE
 		Serial.print(F("Setup VALVE "));
 		Serial.println(s);
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	}
  #ifdef SER_OUT
 	Serial.println(F("Valves done"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 }
 
 void open_valve(int valve) {
@@ -109,7 +108,7 @@ void open_valve(int valve) {
 		Serial.println(F("Close valves"));
   #endif
 		running_h2o = false;
- #endif // _FLO
+ #endif	 // _FLO
 	} else {
 		open_valve(-1);
 		digitalWrite(VALVES[valve], HIGH);
@@ -118,46 +117,46 @@ void open_valve(int valve) {
 		Serial.println(F("Open valve"));
   #endif
 		running_h2o = true;
- #endif // _FLO
+ #endif	 // _FLO
 	}
 }
-#endif // _VAL
+#endif	// _VAL
 
 #ifdef _PWM
 void disable_mixers() {
  #ifdef SER_OUT
 	Serial.println(F("Stopping mixers"));
- #endif // SER_OUT
-	analogWrite(PWM[0], (uint8_t) (0));
+ #endif	 // SER_OUT
+	analogWrite(PWM[0], (uint8_t)(0));
 }
 
 void enable_mixers() {
 	disable_mixers();
  #ifdef SER_OUT
 	Serial.println(F("Starting mixers"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 	delay(400);
-	
+
 	float speed_x = 0.85;
-	
-	analogWrite(PWM[0], (uint8_t) (speed_x * 0.9 * 255));
+
+	analogWrite(PWM[0], (uint8_t)(speed_x * 0.9 * 255));
 	delay(200);
-	
-	analogWrite(PWM[0], (uint8_t) (speed_x * 0.6 * 255));
+
+	analogWrite(PWM[0], (uint8_t)(speed_x * 0.6 * 255));
 	delay(400);
-	
-	for (float r = .3; r <= .5 ; r += .01) {
+
+	for (float r = .3; r <= .5; r += .01) {
 		analogWrite(PWM[0], speed_x * r * 255);
 		delay(100);
 	}
 }
-#endif // _PWM
+#endif	// _PWM
 
 #ifdef _FLO
 void setup_flow_rate() {
  #ifdef SER_OUT
 	Serial.println(F("Setup flow rate sensor"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 	pinMode(FLOW_RATE[0], INPUT);
 	digitalWrite(FLOW_RATE[0], LOW);
 }
@@ -173,17 +172,17 @@ void h2o_tick_out() {
 void enable_flow_rate(bool enable) {
  #ifdef SER_OUT
 	Serial.println(F("Configuring flow rate sensor"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 	if (enable) {
 		attachInterrupt(digitalPinToInterrupt(FLOW_RATE[0]), h2o_tick_in, CHANGE);
  #ifdef SER_OUT
 		Serial.println(F("Enabled flow rate pin interrupt"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 	} else {
 		detachInterrupt(digitalPinToInterrupt(FLOW_RATE[0]));
  #ifdef SER_OUT
 		Serial.println(F("Disabled flow rate pin interrupt"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 	}
 }
 /*
@@ -283,7 +282,7 @@ unsigned long set_h2o_rate(uint8_t s, float h2o_n_rate) { // rate in mL / sec
 void setup_pwm_power() {
  #ifdef SER_OUT_VERBOSE
 	Serial.println(F("Setting up PWM"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	// 7 outputs
 	for (uint8_t s = 0; s < COUNT_PWM; ++s) {
 		pinMode(PWM[s], OUTPUT);
@@ -291,18 +290,19 @@ void setup_pwm_power() {
  #ifdef SER_OUT_VERBOSE
 		Serial.print(F("Setup PWM "));
 		Serial.println(s);
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	}
  #ifdef SER_OUT
 	Serial.println(F("PWM done"));
- #endif // SER_OUT
+ #endif	 // SER_OUT
 }
-#endif // _PWM
+#endif	// _PWM
 
 #if defined(_NUT) || defined(_H2O)
 void disable_steppers() {
 	unsigned long c_time = millis();
-	while (c_time + 1000 >= millis());
+	while (c_time + 1000 >= millis())
+		;
 	for (uint8_t s = 0; s < COUNT_STEPPERS; ++s) {
 		stepper[s].stop();
 		//stepper[s].setCurrentPosition(0);
@@ -318,6 +318,4 @@ void disable_steppers() {
 	Serial.println(F("Stopped steppers"));
  #endif
 }
-#endif // defined(_NUT) || defined(_H2O)
-
-
+#endif	// defined(_NUT) || defined(_H2O)

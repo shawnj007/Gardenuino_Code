@@ -1,4 +1,4 @@
-const int KEY_NO_PRESS  = -2;
+const int KEY_NO_PRESS = -2;
 const int KEY_NO_CHANGE = -1;
 
 const int KEY_ZE = 0;
@@ -23,5 +23,5 @@ const int KEY_F4 = 13;
 const int KEY_SR = 14;
 const int KEY_SP = 15;
 
-const int MENU_MAIN   = 0;
+const int MENU_MAIN = 0;
 const int MENU_MANUAL = 1;

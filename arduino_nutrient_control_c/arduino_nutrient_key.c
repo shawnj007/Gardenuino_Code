@@ -1,17 +1,16 @@
-
 #include "arduino_nutrient_key.h"
 
 #ifdef _KEY
-int ROW[4] = {P0, P1, P2, P3};
-int COL[4] = {P4, P5, P6, P7};
+int ROW[4] = { P0, P1, P2, P3 };
+int COL[4] = { P4, P5, P6, P7 };
 
-uint8_t key_[4][4] = { { KEY_UL, KEY_UP, KEY_UR, KEY_F1 }, 
-                       { KEY_LT, KEY_CE, KEY_RT, KEY_F2 },
-                       { KEY_DL, KEY_DN, KEY_DR, KEY_F3 },
-                       { KEY_SR, KEY_ZE, KEY_SP, KEY_F4 } };
+uint8_t key_[4][4] = { { KEY_UL, KEY_UP, KEY_UR, KEY_F1 },
+					   { KEY_LT, KEY_CE, KEY_RT, KEY_F2 },
+					   { KEY_DL, KEY_DN, KEY_DR, KEY_F3 },
+					   { KEY_SR, KEY_ZE, KEY_SP, KEY_F4 } };
 
 float last_key = KEY_NO_PRESS;
-float menu_pos = 0; // fmt: XX.YY
+float menu_pos = 0;	 // fmt: XX.YY
 char menu_buff[8];
 
 void setup_key() {
@@ -19,8 +18,8 @@ void setup_key() {
 		keys.pinMode(ROW[i], OUTPUT);
 		keys.pinMode(COL[i], INPUT);
 	}
-	
-	if (keys.begin()){
+
+	if (keys.begin()) {
  #ifdef SER_OUT
 		Serial.println(F("Keys passed!"));
  #endif
@@ -41,7 +40,7 @@ uint8_t check_key() {
 	// else return KEY_NO_CHANGE = no change, KEY_NO_PRESS = no key pressed
  #ifdef SER_OUT_VERBOSE
 	Serial.println(F("checking key"));
- #endif // SER_OUT_VERBOSE
+ #endif	 // SER_OUT_VERBOSE
 	keys.readBuffer();
 	int row, col;
 	for (row = 0; row < 4; ++row) {
@@ -54,7 +53,7 @@ uint8_t check_key() {
  #ifdef SER_OUT
 					Serial.print(F("Key pressed:"));
 					Serial.println(key_out);
- #endif // SER_OUT
+ #endif	 // SER_OUT
 					last_key = key_out;
 					return key_out;
 				} else {
@@ -73,16 +72,15 @@ int select_menu(int menu, int menu_pos) {
 
 	// ... and change options that don't\
 	// result in memory change
-	
+
 	switch (menu) {
 		case MENU_MAIN:
 			switch (menu_pos) {
 				case 0:
 					return MENU_MANUAL;
-					
 			}
 	}
-	
+
 	return 0;
 }
 
@@ -92,26 +90,26 @@ int display_menu(int menu, float menu_pos) {
 
 	switch (menu) {
 		case MENU_MAIN:
-			
 			break;
 	}
-	
+
 	return 0;
 }
 
 int menu = 0;
 
 bool menu_loop(int menu) {
-	
+
 	//check key (and respond in context)
 	uint8_t key = check_key();
-	
+
 	switch (key) {
 		// Enter menu
 		case KEY_SR:
 			// Change to appropriate child-menu
 			menu = select_menu(menu, menu_pos);
-			while (menu_loop(menu));
+			while (menu_loop(menu))
+				;
 			break;
 		case KEY_SP:
 			// Change to appropriate parent-menu
@@ -129,7 +127,7 @@ bool menu_loop(int menu) {
 			//menu_pos += 0.01;
 			break;
 	}
-	
+
 	display_menu(menu, menu_pos);
 
 	return true;
@@ -141,11 +139,11 @@ bool start_loop() {
 	// Get RTC current time
 
 	// For each sink (humidifier/plant)
-	
-		// Calculate stage
-	
-		// Execute stage
-	
+
+	// Calculate stage
+
+	// Execute stage
+
 	return false;
 }
 
@@ -169,7 +167,7 @@ bool f3_loop() {
 bool f4_loop() {
 	return false;
 }
- 
+
 void loop_key() {
 	int key = check_key();
 
@@ -177,26 +175,32 @@ void loop_key() {
 		// Enter menu
 		//case KEY_NO_PRESS:
 		case KEY_NO_CHANGE:
-		  break;
+			break;
 		case KEY_SR:
-		  while (start_loop());
-		  break;
+			while (start_loop())
+				;
+			break;
 		case KEY_SP:
-		  while (stop_loop());
-		  break;
+			while (stop_loop())
+				;
+			break;
 		case KEY_F1:
-		  while (f1_loop());
-		  break;
+			while (f1_loop())
+				;
+			break;
 		case KEY_F2:
-		  while (f2_loop());
-		  break;
+			while (f2_loop())
+				;
+			break;
 		case KEY_F3:
-		  while (f3_loop());
-		  break;
+			while (f3_loop())
+				;
+			break;
 		case KEY_F4:
-		  while (f4_loop());
-		  break;
+			while (f4_loop())
+				;
+			break;
 	}
 }
- #endif // _MENU
-#endif // _KEY
+ #endif	 // _MENU
+#endif	 // _KEY

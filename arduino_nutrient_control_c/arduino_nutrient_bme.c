@@ -1,4 +1,3 @@
-
 #ifdef _BME
 void setup_bme() {
 	if (bme.begin(0x76)) {
@@ -6,15 +5,15 @@ void setup_bme() {
 		Serial.print(F("Temperature = "));
 		Serial.print(bme.readTemperature());
 		Serial.println(F(" °C"));
-		
+
 		Serial.print(F("Pressure = "));
 		Serial.print(bme.readPressure() / 100.0F);
 		Serial.println(F(" hP"));
-		
+
 		Serial.print(F("Approx. Altitude = "));
 		Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
 		Serial.println(F(" m"));
-		
+
 		Serial.print(F("Humidity = "));
 		Serial.print(bme.readHumidity());
 		Serial.println(F(" %"));
@@ -34,4 +33,4 @@ void loop_bme() {
 	p = bme.readPressure() / 100.0F;
 	h = bme.readHumidity();
 }
-#endif // _BME
+#endif	// _BME
